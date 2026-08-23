@@ -253,7 +253,7 @@ h1 em { color: var(--phosphor); font-style: normal; }
   align-items: start;
   padding: 0.85rem;
   border: 1px solid var(--line);
-  background: rgba(166,255,77,.025);
+  background: #0c100b;
   color: #cdd5ca;
   font: 500 clamp(.7rem, .9vw, .85rem)/1.55 var(--mono);
 }
@@ -390,9 +390,8 @@ kbd { padding: .1rem .3rem; border: 1px solid #384038; border-bottom-width: 2px;
 :focus-visible { outline: 2px solid var(--phosphor); outline-offset: 4px; }
 
 @media (max-width: 980px) {
-  .site-header { padding: 0 1.5rem; }
+  .site-header { grid-template-columns: 1fr 1fr; padding: 0 1.5rem; }
   .header-status { display: none; }
-  .site-header { grid-template-columns: 1fr 1fr; }
   .hero { grid-template-columns: 1fr; padding: 9rem 1.5rem 6rem; }
   .hero-copy { max-width: 43rem; }
   .console-wrap { max-width: 100%; }

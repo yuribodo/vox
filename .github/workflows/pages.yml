@@ -36,7 +36,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: site
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build Next.js static export
         working-directory: site

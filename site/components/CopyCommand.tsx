@@ -2,23 +2,11 @@
 
 import { useRef, useState } from "react";
 
-type CopyCommandProps = { command: string };
+type CopyCommandProps = Readonly<{ command: string }>;
 
 async function copyText(text: string) {
-  if (navigator.clipboard && window.isSecureContext) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.readOnly = true;
-  textarea.style.position = "fixed";
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand("copy");
-  textarea.remove();
+  if (!navigator.clipboard) throw new Error("Clipboard API unavailable");
+  await navigator.clipboard.writeText(text);
 }
 
 export function CopyCommand({ command }: CopyCommandProps) {

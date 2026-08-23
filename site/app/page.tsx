@@ -16,10 +16,10 @@ export default function Home() {
           <span>vox</span>
         </a>
 
-        <div className="header-status" role="status" aria-label="Project status">
+        <output className="header-status" aria-label="Project status">
           <span className="status-light" />
           <span>open source / v0.1.0</span>
-        </div>
+        </output>
 
         <a className="header-link" href={repository}>GitHub <span aria-hidden="true">↗</span></a>
       </header>

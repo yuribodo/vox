@@ -51,7 +51,7 @@ jobs:
           cache-dependency-path: site/package-lock.json
       - name: Install landing page dependencies
         working-directory: site
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Lint landing page
         working-directory: site
         run: npm run lint
