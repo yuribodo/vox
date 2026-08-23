@@ -1488,11 +1488,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
 The following npm package may be included in this product:
 
- - @fontsource-variable/geist@5.3.0
+ - @fontsource-variable/manrope@5.3.0
 
 This package contains the following license:
 
-Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font) Geist-Italic[wght].ttf: Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font)
+Copyright 2019 The Manrope Project Authors (https://github.com/sharanda/manrope)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:

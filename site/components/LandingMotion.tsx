@@ -17,66 +17,47 @@ export function LandingMotion({ children }: Readonly<{ children: ReactNode }>) {
       const media = gsap.matchMedia();
 
       media.add("(prefers-reduced-motion: no-preference)", () => {
-        const intro = gsap.timeline({ defaults: { ease: "power4.out" } });
-        intro
-          .from("[data-hero-media]", {
-            clipPath: "inset(0 0 100% 0)",
-            scale: 1.035,
-            duration: 1.25,
-          })
-          .from("[data-intro]", { y: -10, autoAlpha: 0, duration: 0.45 }, "-=0.72")
-          .from(
-            "[data-hero-copy]",
-            { y: 28, autoAlpha: 0, duration: 0.7, stagger: 0.08 },
-            "-=0.58",
-          )
-          .from(".readout-line i", { scaleX: 0, duration: 0.7 }, "-=0.45");
+        gsap.from("[data-intro]", {
+          y: 12,
+          autoAlpha: 0,
+          duration: 0.55,
+          stagger: 0.055,
+          ease: "power3.out",
+        });
 
-        gsap.to("[data-hero-media]", {
-          scale: 1.075,
-          yPercent: 4,
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".hero",
-            start: "top top",
-            end: "bottom top",
-            scrub: 0.8,
-          },
+        const path = document.querySelector<SVGPathElement>("[data-signal-path]");
+        if (path) {
+          const length = path.getTotalLength();
+          gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
+          gsap.to(path, { strokeDashoffset: 0, duration: 1.1, delay: 0.3, ease: "power2.out" });
+        }
+
+        gsap.from("[data-signal-dot]", {
+          scale: 0.92,
+          autoAlpha: 0,
+          transformOrigin: "center",
+          duration: 0.35,
+          delay: 1,
+          ease: "power3.out",
         });
 
         gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((element) => {
           gsap.from(element, {
-            y: 26,
+            y: 16,
             autoAlpha: 0,
-            duration: 0.7,
+            duration: 0.5,
             ease: "power3.out",
-            scrollTrigger: { trigger: element, start: "top 84%", once: true },
+            scrollTrigger: { trigger: element, start: "top 88%", once: true },
           });
         });
 
-        gsap.utils.toArray<HTMLElement>("[data-flow-row]").forEach((row) => {
-          const rule = row.querySelector<HTMLElement>(".flow-rule i");
-          const content = row.querySelectorAll(".flow-number, h3, .flow-detail");
-          const timeline = gsap.timeline({
-            scrollTrigger: { trigger: row, start: "top 78%", once: true },
-          });
-
-          timeline.from(content, {
-            y: 24,
-            autoAlpha: 0,
-            duration: 0.62,
-            stagger: 0.06,
-            ease: "power3.out",
-          });
-
-          if (rule) {
-            timeline.from(rule, {
-              scaleX: 0,
-              transformOrigin: "left center",
-              duration: 0.8,
-              ease: "power3.inOut",
-            }, 0);
-          }
+        gsap.from("[data-detail]", {
+          y: 12,
+          autoAlpha: 0,
+          duration: 0.45,
+          stagger: 0.06,
+          ease: "power3.out",
+          scrollTrigger: { trigger: ".detail-list", start: "top 86%", once: true },
         });
       });
 

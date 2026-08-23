@@ -31,7 +31,7 @@ the source repository.
 | [React DOM 19.2.8](https://github.com/facebook/react/tree/v19.2.8) | Browser rendering | MIT; copyright Meta Platforms, Inc. and affiliates |
 | [GSAP 3.15.0](https://github.com/greensock/GSAP/tree/3.15.0) | Scroll-linked signal-path animation | GSAP Standard no-charge license; GreenSock, Inc. |
 | [Motion 13.1.1](https://github.com/motiondivision/motion/tree/v13.1.1) | Spring and pointer interactions | MIT; copyright Motion contributors |
-| [Geist 5.3.0](https://fontsource.org/fonts/geist) | Variable display typeface, self-hosted with Fontsource | SIL Open Font License 1.1; Geist contributors |
+| [Manrope 5.3.0](https://fontsource.org/fonts/manrope) | Variable interface typeface, self-hosted with Fontsource | SIL Open Font License 1.1; Manrope contributors |
 | [IBM Plex Mono 5.3.0](https://fontsource.org/fonts/ibm-plex-mono) | Monospaced interface typeface, self-hosted with Fontsource | SIL Open Font License 1.1; copyright IBM Corp. |
 
 The deployed static export includes compiled client code from those packages.
