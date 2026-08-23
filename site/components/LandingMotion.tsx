@@ -19,83 +19,51 @@ export function LandingMotion({ children }: Readonly<{ children: ReactNode }>) {
       media.add("(prefers-reduced-motion: no-preference)", () => {
         const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
         intro
-          .from("[data-specimen]", { clipPath: "inset(0 100% 0 0)", duration: 1.25 })
-          .from("[data-intro]", { y: 24, autoAlpha: 0, duration: 0.72, stagger: 0.075 }, "-=0.72")
-          .from(".hero-calibration i", { scaleX: 0, duration: 0.8 }, "-=0.45");
+          .from("[data-specimen]", { clipPath: "inset(0 100% 0 0)", duration: 1.15 })
+          .from("[data-intro]", { y: 18, autoAlpha: 0, duration: 0.65, stagger: 0.06 }, "-=0.68")
+          .from(".hero-calibration i", { scaleX: 0, duration: 0.7 }, "-=0.4");
 
         gsap.to("[data-specimen]", {
-          yPercent: -5,
-          rotate: 0.8,
+          yPercent: -3,
+          rotate: 0.5,
           ease: "none",
           scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 0.6 },
         });
 
         gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((element) => {
           gsap.from(element, {
-            y: 36,
+            y: 20,
             autoAlpha: 0,
-            duration: 0.9,
+            duration: 0.72,
             ease: "power3.out",
-            scrollTrigger: { trigger: element, start: "top 84%", once: true },
+            scrollTrigger: { trigger: element, start: "top 86%", once: true },
           });
         });
 
-        const path = document.querySelector<SVGPathElement>("[data-voice-path]");
-        if (path) {
-          const length = path.getTotalLength();
-          gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
-          gsap.to(path, {
-            strokeDashoffset: 0,
-            duration: 1.35,
-            ease: "power2.inOut",
-            scrollTrigger: { trigger: ".signal-stage", start: "top 72%", once: true },
+        gsap.utils.toArray<HTMLElement>("[data-section-image]").forEach((figure) => {
+          const image = figure.querySelector<HTMLElement>("[data-image-inner]");
+          const timeline = gsap.timeline({
+            scrollTrigger: { trigger: figure, start: "top 82%", once: true },
           });
-        }
 
-        const frames = gsap.utils.toArray<HTMLElement>("[data-signal-frame]");
-        const steps = gsap.utils.toArray<HTMLElement>("[data-process-step]");
-        const progress = document.querySelector<HTMLElement>("[data-signal-progress]");
-
-        steps.forEach((step, index) => {
-          ScrollTrigger.create({
-            trigger: step,
-            start: "top 58%",
-            end: "bottom 42%",
-            onToggle: ({ isActive }) => {
-              if (!isActive) return;
-
-              steps.forEach((item, itemIndex) => item.classList.toggle("is-active", itemIndex === index));
-              frames.forEach((frame, frameIndex) => {
-                frame.classList.toggle("is-active", frameIndex === index);
-                gsap.to(frame, {
-                  autoAlpha: frameIndex === index ? 1 : 0,
-                  y: frameIndex === index ? 0 : 14,
-                  duration: 0.42,
-                  ease: "power2.out",
-                  overwrite: true,
-                });
-              });
-
-              if (progress) {
-                gsap.to(progress, { scaleX: (index + 1) / steps.length, duration: 0.55, ease: "power3.out" });
-              }
-            },
+          timeline.from(figure, {
+            clipPath: "inset(0 100% 0 0)",
+            duration: 1.05,
+            ease: "power3.inOut",
           });
+
+          if (image) {
+            timeline.from(image, { scale: 1.035, duration: 1.05, ease: "power3.out" }, 0);
+          }
         });
 
-        gsap.to("[data-signal-beam]", {
-          xPercent: 520,
-          ease: "none",
-          scrollTrigger: { trigger: ".process-body", start: "top 70%", end: "bottom 35%", scrub: true },
-        });
-
-        gsap.from("[data-install-stamp] span", {
-          yPercent: 110,
-          rotate: 8,
-          stagger: 0.08,
-          duration: 0.85,
+        gsap.from("[data-step-list] li", {
+          y: 14,
+          autoAlpha: 0,
+          duration: 0.58,
+          stagger: 0.07,
           ease: "power3.out",
-          scrollTrigger: { trigger: ".install", start: "top 72%", once: true },
+          scrollTrigger: { trigger: "[data-step-list]", start: "top 84%", once: true },
         });
       });
 

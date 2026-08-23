@@ -1,31 +1,30 @@
+import Image from "next/image";
 import { CopyCommand } from "../components/CopyCommand";
 import { LandingMotion } from "../components/LandingMotion";
 import { MotionLink } from "../components/MotionLink";
 import { SpecimenPoster } from "../components/SpecimenPoster";
 
 const repository = "https://github.com/yuribodo/vox";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-const processSteps = [
+const steps = [
   {
     number: "01",
-    label: "capture",
-    title: "Hold. Speak. Release.",
-    body: "Vox records a clean mono stream through PipeWire while the Flow Bar gives you just enough feedback.",
-    meta: "16 kHz / PCM / local buffer",
+    name: "capture",
+    description: "Hold Super + V and speak. PipeWire records a clean local audio buffer.",
+    detail: "16 kHz / PCM",
   },
   {
     number: "02",
-    label: "decode",
-    title: "Your GPU does the listening.",
-    body: "Whisper and Silero VAD turn the signal into words on the workstation. No transcription round trip.",
-    meta: "large-v3-turbo / CUDA",
+    name: "transcribe",
+    description: "Whisper and Silero VAD turn the signal into words on your NVIDIA GPU.",
+    detail: "large-v3-turbo / CUDA",
   },
   {
     number: "03",
-    label: "insert",
-    title: "Text returns to the cursor.",
-    body: "Vox restores focus and pastes the transcript where you started. It never submits on your behalf.",
-    meta: "clipboard / no automatic Enter",
+    name: "insert",
+    description: "Vox returns to the original field and pastes. It never presses Enter.",
+    detail: "clipboard / no submit",
   },
 ];
 
@@ -90,93 +89,76 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="process" id="signal" aria-labelledby="process-title">
-          <header className="process-heading" data-reveal>
-            <p className="section-label"><span>01</span> signal path</p>
-            <h2 id="process-title">the shortest route<br />from voice to text.</h2>
-            <p className="process-intro">
-              One gesture in. One paste out. The signal never needs to become
-              somebody else&apos;s data.
+        <section className="story" id="signal" aria-labelledby="story-title">
+          <header className="story-heading" data-reveal>
+            <p className="section-label"><span>01</span> the signal</p>
+            <h2 id="story-title">the whole trip<br />stays on this desk.</h2>
+            <p>
+              Vox keeps the path short: microphone, local model, cursor. No
+              account, no upload, no hidden handoff.
             </p>
           </header>
 
-          <div className="process-body">
-            <div className="signal-stage" aria-hidden="true">
-              <div className="signal-ruler"><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span></div>
-              <div className="signal-viewport">
-                <div className="signal-beam" data-signal-beam />
-
-                <div className="signal-frame is-active" data-signal-frame>
-                  <p className="signal-state">input / armed</p>
-                  <svg className="voice-trace" viewBox="0 0 900 240" preserveAspectRatio="none">
-                    <path
-                      data-voice-path
-                      d="M0 122 L32 122 L48 118 L65 128 L82 116 L99 130 L116 92 L132 158 L149 70 L166 176 L183 109 L200 134 L216 82 L233 164 L250 102 L267 138 L284 47 L300 197 L317 86 L334 155 L351 108 L368 132 L385 98 L401 145 L418 113 L435 127 L452 120 L469 124 L486 119 L503 128 L519 91 L536 153 L553 61 L570 183 L587 78 L604 167 L620 103 L637 140 L654 111 L671 132 L688 116 L705 126 L721 120 L738 123 L755 121 L772 122 L900 122"
-                    />
-                  </svg>
-                  <div className="signal-readout"><strong>−12.8</strong><span>dBFS<br />peak</span></div>
-                </div>
-
-                <div className="signal-frame" data-signal-frame>
-                  <p className="signal-state">decoder / local</p>
-                  <div className="token-field">
-                    <span>make</span><span>the</span><span>interface</span><span>feel</span>
-                    <span>immediate</span><span>and</span><span>keep</span><span>the</span>
-                    <span>transcript</span><span>on</span><span>this</span><span>machine</span>
-                  </div>
-                  <p className="decoder-device">/dev/nvidia0</p>
-                </div>
-
-                <div className="signal-frame" data-signal-frame>
-                  <p className="signal-state">clipboard / ready</p>
-                  <blockquote>
-                    “make the interface feel immediate and keep the transcript
-                    on this machine”<span className="text-cursor" />
-                  </blockquote>
-                  <div className="paste-status"><span>focus restored</span><span>submit: false</span></div>
-                </div>
-              </div>
-              <div className="signal-progress"><span data-signal-progress /></div>
-              <p className="stage-caption">live model of the local signal path / scroll to advance</p>
+          <figure className="editorial-specimen story-specimen" data-section-image>
+            <div className="specimen-image" data-image-inner>
+              <Image
+                alt="Microphone diaphragm connected to a printed waveform, signal board and two blank transcript slips"
+                src={`${basePath}/images/signal-specimen.webp`}
+                fill
+                sizes="(max-width: 720px) 100vw, 94vw"
+              />
             </div>
+            <figcaption>
+              <span>FIG. V—002</span>
+              <span>signal / decode / return</span>
+            </figcaption>
+          </figure>
 
-            <ol className="process-steps">
-              {processSteps.map((step, index) => (
-                <li
-                  className={index === 0 ? "is-active" : ""}
-                  data-process-step
-                  id={`step-${step.label}`}
-                  key={step.label}
-                >
-                  <div className="step-id"><span>{step.number}</span><span>{step.label}</span></div>
-                  <h3>{step.title}</h3>
-                  <p>{step.body}</p>
-                  <code>{step.meta}</code>
-                </li>
-              ))}
-            </ol>
-          </div>
+          <ol className="story-steps" data-step-list id="signal-steps">
+            {steps.map((step) => (
+              <li key={step.name}>
+                <div className="step-heading">
+                  <span>{step.number}</span>
+                  <h3>{step.name}</h3>
+                </div>
+                <p>{step.description}</p>
+                <code>{step.detail}</code>
+              </li>
+            ))}
+          </ol>
         </section>
 
-        <section className="install" id="install" aria-labelledby="install-title">
-          <div className="install-stamp" aria-hidden="true" data-install-stamp>
-            <span>V</span><span>O</span><span>X</span>
-          </div>
-
-          <div className="install-heading" data-reveal>
-            <p className="section-label"><span>02</span> bootstrap</p>
-            <h2 id="install-title">built for one<br />machine. yours.</h2>
+        <section className="build" id="install" aria-labelledby="build-title">
+          <header className="build-heading" data-reveal>
+            <p className="section-label"><span>02</span> your machine</p>
+            <h2 id="build-title">you own<br />the listener.</h2>
             <p>
-              An open-source prototype for Cinnamon on X11, PipeWire and NVIDIA
-              CUDA. Read it, build it, make it yours.
+              Vox is open source and runs where you work: Cinnamon on X11,
+              PipeWire, Whisper and NVIDIA CUDA.
             </p>
-          </div>
+          </header>
 
-          <div className="install-panel" data-reveal>
-            <div className="install-panel-head">
-              <span>quick start / bash</span>
-              <span>01—02</span>
+          <figure className="editorial-specimen build-specimen" data-section-image>
+            <div className="specimen-image" data-image-inner>
+              <Image
+                alt="Mechanical keys, aluminum heatsink, circuit board, USB cable and precision tools arranged as a Linux workstation specimen"
+                src={`${basePath}/images/machine-specimen.webp`}
+                fill
+                sizes="(max-width: 720px) 100vw, 94vw"
+              />
             </div>
+            <figcaption>
+              <span>FIG. V—003</span>
+              <span>workstation kit / local compute</span>
+            </figcaption>
+          </figure>
+
+          <div className="install-sheet" data-reveal>
+            <div className="install-sheet-title">
+              <span>quick start</span>
+              <span>2 commands</span>
+            </div>
+
             <div className="command-row">
               <span className="command-index">01</span>
               <code>git clone https://github.com/yuribodo/vox.git &amp;&amp; cd vox</code>
@@ -187,14 +169,15 @@ export default function Home() {
               <code>make build &amp;&amp; make fetch-whisper &amp;&amp; make doctor</code>
               <CopyCommand command="make build && make fetch-whisper && make doctor" />
             </div>
+
             <div className="requirements">
               <span>Cinnamon / X11</span><span>PipeWire</span><span>NVIDIA CUDA</span><span>Go 1.26</span>
             </div>
           </div>
 
-          <footer className="install-footer" data-reveal>
-            <MotionLink className="action action-dark" href={`${repository}#install-and-start-using-vox`}>
-              open the install guide <span aria-hidden="true">↗</span>
+          <footer className="build-footer" data-reveal>
+            <MotionLink className="action action-primary" href={`${repository}#install-and-start-using-vox`}>
+              read the install guide <span aria-hidden="true">↗</span>
             </MotionLink>
             <div className="footer-meta">
               <span>MIT / open source</span>
