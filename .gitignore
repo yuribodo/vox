@@ -12,6 +12,10 @@ artifacts/benchmark-results.json
 # Build output
 /vox
 /bin/
+/site/.next/
+/site/node_modules/
+/site/out/
+/site/*.tsbuildinfo
 __pycache__/
 *.py[cod]
 

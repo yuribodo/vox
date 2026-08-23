@@ -1,0 +1,53 @@
+"use client";
+
+import { useRef, useState } from "react";
+
+type CopyCommandProps = { command: string };
+
+async function copyText(text: string) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.readOnly = true;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+}
+
+export function CopyCommand({ command }: CopyCommandProps) {
+  const [label, setLabel] = useState("copy");
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleCopy = async () => {
+    try {
+      await copyText(command);
+      setLabel("copied");
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setLabel("copy"), 1600);
+    } catch {
+      setLabel("select text");
+    }
+  };
+
+  return (
+    <button
+      className={`copy-button${label === "copied" ? " is-copied" : ""}`}
+      type="button"
+      onClick={handleCopy}
+      aria-label={`Copy command: ${command}`}
+    >
+      <span aria-live="polite">{label}</span>
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <rect x="6" y="6" width="10" height="10" rx="1" />
+        <path d="M4 13H3V3h10v1" />
+      </svg>
+    </button>
+  );
+}

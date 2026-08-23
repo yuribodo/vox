@@ -3,6 +3,8 @@
 [![CI](https://github.com/yuribodo/vox/actions/workflows/ci.yml/badge.svg)](https://github.com/yuribodo/vox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+[Website](https://yuribodo.github.io/vox/) · [Install](#install-and-start-using-vox) · [Architecture](docs/architecture.md) · [Security](SECURITY.md)
+
 **Private, local push-to-talk dictation for Linux. Speak, review, then send.**
 
 Vox records from PipeWire, transcribes locally with Whisper, and pastes the
@@ -416,6 +418,21 @@ make build
 The CI workflow runs the race-enabled Go tests and `go vet` on every push and
 pull request.
 
+### Landing page
+
+The public website is a Next.js App Router project under `site/`. It requires
+Node.js 20.9 or newer; CI and the checked-in `.nvmrc` use Node.js 24.
+
+```bash
+cd site
+npm ci
+npm run dev
+```
+
+Before publishing changes, run `npm run lint`, `npm run typecheck`, and
+`npm run build`. The Pages workflow creates a static export and deploys it from
+`site/out`; the landing page does not require a production Node.js server.
+
 ### Project map
 
 | Path | Responsibility |
@@ -432,6 +449,7 @@ pull request.
 | `scripts/install-desktop-shortcut.py` | Idempotent Cinnamon shortcuts |
 | `benchmarks` | Private-dataset harness and public example manifest |
 | `artifacts` | Sanitized benchmark evidence |
+| `site` | Next.js public landing page and static export configuration |
 
 ## Further documentation
 
