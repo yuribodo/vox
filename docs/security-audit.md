@@ -7,11 +7,12 @@ Version reviewed: 0.1.0 pre-release
 ## Scope and method
 
 This review covered every tracked Go, Python, shell, workflow, and documentation
-file; all 46 reachable Git commits; runtime state and process signaling;
-recording and paste paths; benchmark handling; external downloads; and CI
-permissions. Dependency copyright and licenses are documented separately in
-[`licensing-audit.md`](licensing-audit.md). This review combined manual
-data-flow analysis with:
+file; the 46-commit private development history; runtime state and process
+signaling; recording and paste paths; benchmark handling; external downloads;
+and CI permissions. The public repository begins with a separate sanitized root
+commit. Dependency copyright and licenses are documented separately in
+[`licensing-audit.md`](licensing-audit.md). This review combined manual data-flow
+analysis with:
 
 - `make verify` (race-enabled Go tests, Python tests, `go vet`, syntax checks);
 - the official Go vulnerability scanner, `govulncheck` v1.7.0;
@@ -57,7 +58,8 @@ changes. Results describe this repository at the version and date above.
 ## Automated scan results
 
 - `govulncheck`: no reachable vulnerabilities found.
-- Gitleaks: 46 commits and approximately 272 KB scanned; no leaks found.
+- Gitleaks: the 46-commit private development history and the public snapshot
+  were scanned; no leaks found.
 - Current tracked tree: no recordings, private benchmark manifest, model weights,
   private keys, environment files, tokens, or generated transcript results.
 - Go module graph: standard library only; the application has no third-party Go
@@ -92,18 +94,16 @@ changes. Results describe this repository at the version and date above.
 8. **The local account is trusted.** Vox does not defend against malware already
    running as the same user, a compromised desktop session, kernel, or driver.
 
-## Publication checklist
+## Publication controls
 
-- Do not make the existing Git history public as-is. Removed internal
-  requirements, decisions, experiment notes, and machine reports remain in
-  earlier commits. Publish a clean source snapshot or perform a reviewed,
-  coordinated history rewrite first.
-- Enable GitHub private vulnerability reporting before announcing the project.
-- Enable branch protection with required CI and at least one approving review
-  for changes to workflows, download scripts, process signaling, or paste code.
-- Enable GitHub secret scanning and push protection if available for the public
-  repository.
+- The public repository starts from a single sanitized root commit. The prior
+  development history remains in a separate private repository.
+- Public commits use the repository owner's GitHub `noreply` address.
+- `main` requires a pull request, an up-to-date successful `test` check, linear
+  history, and resolved conversations. The rule includes administrators and
+  blocks force-pushes and branch deletion. No external approval is required so
+  the solo maintainer can merge after CI passes.
+- Private vulnerability reporting, secret scanning, push protection, Dependabot
+  alerts, and automated security fixes are enabled.
+- Merge commits are disabled and merged branches are deleted automatically.
 - Create and sign the `v0.1.0` tag only after reviewing the final public diff.
-- Decide whether the author email embedded in existing commit metadata is
-  acceptable. Changing it requires a coordinated history rewrite and is not a
-  code-security requirement because no credential or secret was detected.
