@@ -1,143 +1,190 @@
 import { CopyCommand } from "../components/CopyCommand";
-import { Waveform } from "../components/Waveform";
+import { LandingMotion } from "../components/LandingMotion";
+import { MotionLink } from "../components/MotionLink";
+import { SpecimenPoster } from "../components/SpecimenPoster";
 
 const repository = "https://github.com/yuribodo/vox";
 
+const processSteps = [
+  {
+    number: "01",
+    label: "capture",
+    title: "Hold. Speak. Release.",
+    body: "Vox records a clean mono stream through PipeWire while the Flow Bar gives you just enough feedback.",
+    meta: "16 kHz / PCM / local buffer",
+  },
+  {
+    number: "02",
+    label: "decode",
+    title: "Your GPU does the listening.",
+    body: "Whisper and Silero VAD turn the signal into words on the workstation. No transcription round trip.",
+    meta: "large-v3-turbo / CUDA",
+  },
+  {
+    number: "03",
+    label: "insert",
+    title: "Text returns to the cursor.",
+    body: "Vox restores focus and pastes the transcript where you started. It never submits on your behalf.",
+    meta: "clipboard / no automatic Enter",
+  },
+];
+
 export default function Home() {
   return (
-    <>
+    <LandingMotion>
       <a className="skip-link" href="#main">Skip to content</a>
 
-      <header className="site-header">
+      <header className="site-header" data-intro>
         <a className="brand" href="#top" aria-label="Vox home">
-          <svg className="brand-mark" viewBox="0 0 28 28" aria-hidden="true">
-            <path d="M4 9v10M9 5v18M14 2v24M19 7v14M24 10v8" />
-          </svg>
-          <span>vox</span>
+          <span className="brand-glyph" aria-hidden="true">v<span>o</span>x</span>
+          <span className="brand-note">local voice interface</span>
         </a>
 
-        <output className="header-status" aria-label="Project status">
-          <span className="status-light" />
-          <span>open source / v0.1.0</span>
-        </output>
+        <div className="header-coordinate" aria-hidden="true">
+          <span>LINUX / X11</span>
+          <span>40.7128°N</span>
+        </div>
 
-        <a className="header-link" href={repository}>GitHub <span aria-hidden="true">↗</span></a>
+        <MotionLink className="header-link" href={repository}>
+          source <span aria-hidden="true">↗</span>
+        </MotionLink>
       </header>
 
       <main id="main">
         <section className="hero" id="top" aria-labelledby="hero-title">
-          <div className="hero-copy reveal">
-            <p className="eyebrow"><span>~/voice/input</span> Local Linux dictation</p>
-            <h1 id="hero-title">Say it.<br />See it.<br /><em>Send it.</em></h1>
-            <p className="hero-description">
-              Push-to-talk speech recognition for Linux. Vox captures your voice,
-              runs Whisper locally, and pastes the result exactly where you started.
+          <div className="hero-specimen" data-specimen>
+            <SpecimenPoster />
+          </div>
+
+          <div className="hero-title-wrap">
+            <p className="hero-kicker" data-intro>
+              <span>voice specimen 001</span>
+              <span>/dev/vox</span>
+            </p>
+            <h1 id="hero-title" aria-label="Voice in. Text out. Nothing leaves.">
+              <span data-intro>voice in.</span>
+              <span data-intro>text out.</span>
+              <span className="hero-title-accent" data-intro>nothing leaves.</span>
+            </h1>
+          </div>
+
+          <div className="hero-detail" data-intro>
+            <p>
+              Push-to-talk dictation for Linux. Audio becomes text on your
+              machine, then lands exactly where your cursor was.
             </p>
             <div className="hero-actions">
-              <a className="button button-primary" href={`${repository}#install-and-start-using-vox`}>
-                <span className="button-prompt">$</span> install vox
-              </a>
-              <a className="button button-secondary" href={repository}>view source <span aria-hidden="true">↗</span></a>
+              <MotionLink className="action action-primary" href="#install">
+                install vox <span aria-hidden="true">↓</span>
+              </MotionLink>
+              <MotionLink className="action action-quiet" href={repository}>
+                inspect the source <span aria-hidden="true">↗</span>
+              </MotionLink>
             </div>
-            <p className="safety-note"><span aria-hidden="true">■</span> No cloud during dictation. No automatic Enter.</p>
           </div>
 
-          <div className="console-wrap reveal" data-delay="1">
-            <div className="console" role="img" aria-label="Animated representation of a Vox recording session">
-              <div className="console-bar">
-                <div className="console-dots" aria-hidden="true"><i /><i /><i /></div>
-                <span>vox — pipewire:alsa_input.usb</span>
-                <span className="console-mode">REC</span>
-              </div>
-
-              <div className="console-screen">
-                <div className="console-meta"><span>CH_01 / 16KHZ / MONO</span><span>LOCAL_ONLY</span></div>
-                <div className="scope" aria-hidden="true">
-                  <Waveform />
-                  <span className="scope-axis axis-y">+1.0<br /><br />0.0<br /><br />−1.0</span>
-                  <span className="scope-axis axis-x">00:00:06:18</span>
-                </div>
-
-                <div className="transcript-preview">
-                  <span className="prompt" aria-hidden="true">›</span>
-                  <p>make the interaction feel immediate and keep the transcript on this machine<span className="cursor" aria-hidden="true" /></p>
-                </div>
-
-                <div className="console-footer">
-                  <span><i className="rec-dot" aria-hidden="true" /> listening</span>
-                  <span>large-v3-turbo / cuda</span>
-                  <span className="timer">00:06</span>
-                </div>
-              </div>
-            </div>
-            <p className="console-caption"><span>FIG. 01</span> The Flow Bar listens. Your machine does the rest.</p>
-          </div>
-
-          <a className="scroll-cue" href="#signal" aria-label="Continue to how Vox works">
-            <span>scroll to inspect</span><i aria-hidden="true" />
-          </a>
-        </section>
-
-        <section className="signal-section" id="signal" aria-labelledby="signal-title">
-          <div className="section-heading reveal">
-            <p className="section-index">01 / signal path</p>
-            <h2 id="signal-title">One shortcut.<br />Zero round trips.</h2>
-            <p>Audio becomes text without leaving the workstation.</p>
-          </div>
-
-          <div className="signal-grid reveal" data-delay="1">
-            <article className="signal-step">
-              <div className="step-top"><span>01</span><span>CAPTURE</span></div>
-              <div className="step-visual capture-visual" aria-hidden="true">
-                {Array.from({ length: 11 }, (_, index) => <span key={index} />)}
-              </div>
-              <h3>Speak naturally.</h3>
-              <p>Press <kbd>Super</kbd> + <kbd>V</kbd>. PipeWire records clean mono audio while the Flow Bar shows the live level.</p>
-              <code>16 kHz / PCM WAV</code>
-            </article>
-
-            <article className="signal-step feature-step">
-              <div className="step-top"><span>02</span><span>DECODE</span></div>
-              <div className="step-visual decode-visual" aria-hidden="true">
-                <div className="model-core">W</div>
-                <div className="orbit orbit-one" />
-                <div className="orbit orbit-two" />
-                <i className="node n1" /><i className="node n2" /><i className="node n3" />
-              </div>
-              <h3>Transcribe locally.</h3>
-              <p>Whisper large-v3-turbo and Silero VAD run on your NVIDIA GPU. Dictation stays yours.</p>
-              <code>whisper.cpp / CUDA</code>
-            </article>
-
-            <article className="signal-step">
-              <div className="step-top"><span>03</span><span>INSERT</span></div>
-              <div className="step-visual insert-visual" aria-hidden="true">
-                <span className="insert-line" /><span className="insert-line short" />
-                <span className="insert-line" /><span className="insert-cursor" />
-              </div>
-              <h3>Review, then send.</h3>
-              <p>Vox returns to the field you started from and pastes the transcript. It never presses Enter.</p>
-              <code>Ctrl+V / no submit</code>
-            </article>
+          <div className="hero-calibration" aria-hidden="true" data-intro>
+            <span>REC</span>
+            <i />
+            <span>00:06.4</span>
           </div>
         </section>
 
-        <section className="install-section" id="install" aria-labelledby="install-title">
-          <div className="install-background" aria-hidden="true">VOX</div>
-          <div className="install-copy reveal">
-            <p className="section-index">02 / bootstrap</p>
-            <h2 id="install-title">Your voice.<br />Your silicon.</h2>
-            <p>A focused prototype for Cinnamon on X11, built for people who like knowing exactly where their data goes.</p>
+        <section className="process" id="signal" aria-labelledby="process-title">
+          <header className="process-heading" data-reveal>
+            <p className="section-label"><span>01</span> signal path</p>
+            <h2 id="process-title">the shortest route<br />from voice to text.</h2>
+            <p className="process-intro">
+              One gesture in. One paste out. The signal never needs to become
+              somebody else&apos;s data.
+            </p>
+          </header>
+
+          <div className="process-body">
+            <div className="signal-stage" aria-hidden="true">
+              <div className="signal-ruler"><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span></div>
+              <div className="signal-viewport">
+                <div className="signal-beam" data-signal-beam />
+
+                <div className="signal-frame is-active" data-signal-frame>
+                  <p className="signal-state">input / armed</p>
+                  <svg className="voice-trace" viewBox="0 0 900 240" preserveAspectRatio="none">
+                    <path
+                      data-voice-path
+                      d="M0 122 L32 122 L48 118 L65 128 L82 116 L99 130 L116 92 L132 158 L149 70 L166 176 L183 109 L200 134 L216 82 L233 164 L250 102 L267 138 L284 47 L300 197 L317 86 L334 155 L351 108 L368 132 L385 98 L401 145 L418 113 L435 127 L452 120 L469 124 L486 119 L503 128 L519 91 L536 153 L553 61 L570 183 L587 78 L604 167 L620 103 L637 140 L654 111 L671 132 L688 116 L705 126 L721 120 L738 123 L755 121 L772 122 L900 122"
+                    />
+                  </svg>
+                  <div className="signal-readout"><strong>−12.8</strong><span>dBFS<br />peak</span></div>
+                </div>
+
+                <div className="signal-frame" data-signal-frame>
+                  <p className="signal-state">decoder / local</p>
+                  <div className="token-field">
+                    <span>make</span><span>the</span><span>interface</span><span>feel</span>
+                    <span>immediate</span><span>and</span><span>keep</span><span>the</span>
+                    <span>transcript</span><span>on</span><span>this</span><span>machine</span>
+                  </div>
+                  <p className="decoder-device">/dev/nvidia0</p>
+                </div>
+
+                <div className="signal-frame" data-signal-frame>
+                  <p className="signal-state">clipboard / ready</p>
+                  <blockquote>
+                    “make the interface feel immediate and keep the transcript
+                    on this machine”<span className="text-cursor" />
+                  </blockquote>
+                  <div className="paste-status"><span>focus restored</span><span>submit: false</span></div>
+                </div>
+              </div>
+              <div className="signal-progress"><span data-signal-progress /></div>
+              <p className="stage-caption">live model of the local signal path / scroll to advance</p>
+            </div>
+
+            <ol className="process-steps">
+              {processSteps.map((step, index) => (
+                <li
+                  className={index === 0 ? "is-active" : ""}
+                  data-process-step
+                  id={`step-${step.label}`}
+                  key={step.label}
+                >
+                  <div className="step-id"><span>{step.number}</span><span>{step.label}</span></div>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                  <code>{step.meta}</code>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="install" id="install" aria-labelledby="install-title">
+          <div className="install-stamp" aria-hidden="true" data-install-stamp>
+            <span>V</span><span>O</span><span>X</span>
           </div>
 
-          <div className="install-terminal reveal" data-delay="1">
-            <div className="install-label"><span>QUICK START</span><span>bash</span></div>
+          <div className="install-heading" data-reveal>
+            <p className="section-label"><span>02</span> bootstrap</p>
+            <h2 id="install-title">built for one<br />machine. yours.</h2>
+            <p>
+              An open-source prototype for Cinnamon on X11, PipeWire and NVIDIA
+              CUDA. Read it, build it, make it yours.
+            </p>
+          </div>
+
+          <div className="install-panel" data-reveal>
+            <div className="install-panel-head">
+              <span>quick start / bash</span>
+              <span>01—02</span>
+            </div>
             <div className="command-row">
-              <code><span>$</span> git clone https://github.com/yuribodo/vox.git <b>&amp;&amp;</b> cd vox</code>
+              <span className="command-index">01</span>
+              <code>git clone https://github.com/yuribodo/vox.git &amp;&amp; cd vox</code>
               <CopyCommand command="git clone https://github.com/yuribodo/vox.git && cd vox" />
             </div>
-            <div className="command-row secondary-command">
-              <code><span>$</span> make build <b>&amp;&amp;</b> make fetch-whisper <b>&amp;&amp;</b> make doctor</code>
+            <div className="command-row">
+              <span className="command-index">02</span>
+              <code>make build &amp;&amp; make fetch-whisper &amp;&amp; make doctor</code>
               <CopyCommand command="make build && make fetch-whisper && make doctor" />
             </div>
             <div className="requirements">
@@ -145,16 +192,18 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="install-footer reveal" data-delay="2">
-            <a className="button button-primary" href={`${repository}#requirements`}>read the install guide <span aria-hidden="true">↗</span></a>
+          <footer className="install-footer" data-reveal>
+            <MotionLink className="action action-dark" href={`${repository}#install-and-start-using-vox`}>
+              open the install guide <span aria-hidden="true">↗</span>
+            </MotionLink>
             <div className="footer-meta">
-              <span>MIT licensed</span><span>made for Linux</span>
+              <span>MIT / open source</span>
               <a href="third-party-licenses.txt">third-party licenses</a>
-              <span>© 2026 Vox contributors</span>
+              <span>© 2026 contributors</span>
             </div>
-          </div>
+          </footer>
         </section>
       </main>
-    </>
+    </LandingMotion>
   );
 }

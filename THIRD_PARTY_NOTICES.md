@@ -27,8 +27,12 @@ the source repository.
 | Component | Use | License and attribution |
 | --- | --- | --- |
 | [Next.js 16.3.2](https://github.com/vercel/next.js/tree/v16.3.2) | Static site framework and client runtime | MIT; copyright 2025 Vercel, Inc. |
-| [React 19.2.8](https://github.com/facebook/react/tree/v19.2.8) | Interactive waveform and copy controls | MIT; copyright Meta Platforms, Inc. and affiliates |
+| [React 19.2.8](https://github.com/facebook/react/tree/v19.2.8) | Interactive landing-page controls | MIT; copyright Meta Platforms, Inc. and affiliates |
 | [React DOM 19.2.8](https://github.com/facebook/react/tree/v19.2.8) | Browser rendering | MIT; copyright Meta Platforms, Inc. and affiliates |
+| [GSAP 3.15.0](https://github.com/greensock/GSAP/tree/3.15.0) | Scroll-linked signal-path animation | GSAP Standard no-charge license; GreenSock, Inc. |
+| [Motion 13.1.1](https://github.com/motiondivision/motion/tree/v13.1.1) | Spring and pointer interactions | MIT; copyright Motion contributors |
+| [Archivo 5.3.0](https://fontsource.org/fonts/archivo) | Variable display typeface, self-hosted with Fontsource | SIL Open Font License 1.1; Archivo contributors |
+| [IBM Plex Mono 5.3.0](https://fontsource.org/fonts/ibm-plex-mono) | Monospaced interface typeface, self-hosted with Fontsource | SIL Open Font License 1.1; copyright IBM Corp. |
 
 The deployed static export includes compiled client code from those packages.
 A source copy of the main runtime notices lives at
@@ -45,8 +49,8 @@ with this repository. Their own terms apply independently.
 ## Distribution rule
 
 The current application source release does not include the downloaded model
-or inference components. The public website does include compiled Next.js and
-React client code together with their required license notices. If a future
+or inference components. The public website does include compiled client code
+and self-hosted font files together with their required license notices. If a future
 release bundles a binary, model, build tool, or more third-party source, it must
 also bundle the exact license text and required notices from that pinned
 version. This summary is informational; upstream license files control.
