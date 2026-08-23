@@ -230,7 +230,8 @@ Vox treats every transcript as untrusted text.
   directory owned by the current user.
 - Transcript and state files use `0600` permissions.
 - Whisper's generated output stays inside a private temporary directory, and
-  the paste helper never requests clipboard-manager persistence.
+  the paste helper never requests clipboard-manager persistence for a
+  transcript.
 - Recorder state is bound to the Linux process start time before Vox sends a
   signal, preventing a stale PID from targeting an unrelated process.
 - Model inference is local. Network access is used only by the explicit model

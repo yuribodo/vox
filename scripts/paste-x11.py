@@ -32,17 +32,39 @@ def snapshot_clipboard(clipboard: Gtk.Clipboard) -> ClipboardSnapshot:
 
 def set_text(clipboard: Gtk.Clipboard, text: str) -> None:
     clipboard.set_text(text, -1)
-    while Gtk.events_pending():
-        Gtk.main_iteration_do(False)
+    pump_events(0.05)
+
+
+def pump_events(duration: float) -> None:
+    """Keep serving X11 selection requests for at least duration seconds."""
+    deadline = time.monotonic() + duration
+    while True:
+        while Gtk.events_pending():
+            Gtk.main_iteration_do(False)
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return
+        time.sleep(min(0.01, remaining))
+
+
+def persist_restored_clipboard(clipboard: Gtk.Clipboard) -> None:
+    # Ownership has already changed back to the user's original clipboard.
+    # Persisting it here cannot persist the transient transcript.
+    clipboard.store()
+    pump_events(0.05)
 
 
 def restore_clipboard(clipboard: Gtk.Clipboard, snapshot: ClipboardSnapshot) -> None:
     if snapshot.text is not None:
         set_text(clipboard, snapshot.text)
+        persist_restored_clipboard(clipboard)
     elif snapshot.image is not None:
         clipboard.set_image(snapshot.image)
+        pump_events(0.05)
+        persist_restored_clipboard(clipboard)
     else:
-        set_text(clipboard, "")
+        clipboard.clear()
+        pump_events(0.05)
 
 
 def xdotool(*args: str) -> None:
@@ -70,12 +92,15 @@ def paste(window_id: str, text: str) -> None:
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
     snapshot = snapshot_clipboard(clipboard)
     try:
-        # Do not call clipboard.store(): that explicitly asks a clipboard
-        # manager to persist the sensitive transcript after this process exits.
+        # Never call clipboard.store() while the transcript owns the selection:
+        # that would ask a clipboard manager to retain sensitive dictated text.
         set_text(clipboard, text)
         xdotool("windowactivate", "--sync", window_id)
         xdotool("key", "--clearmodifiers", "ctrl+v")
-        time.sleep(0.2)
+        # Clipboard transfer is asynchronous on X11. Electron and other clients
+        # request the selection after the key event; sleeping here would stop
+        # GTK from answering and can make the destination appear frozen.
+        pump_events(1.0)
     finally:
         restore_clipboard(clipboard, snapshot)
 

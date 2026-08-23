@@ -48,7 +48,7 @@ changes. Results describe this repository at the version and date above.
 | High | A stale or edited recorder PID could target a reused process group | State now records `/proc` start ticks and verifies start time plus process-group leadership before signaling |
 | Medium | whisper.cpp could create transcript JSON with a permissive mode under shared `/tmp` | Output now lives in a new private `0700` temporary directory |
 | Medium | `pw-record` could briefly create audio with a permissive mode in an existing public output directory | Recording now occurs inside a private sibling directory and is linked only after mode `0600` is applied |
-| Medium | `clipboard.store()` asked clipboard managers to persist the transient transcript | Persistence requests were removed for both paste and restoration |
+| Medium | `clipboard.store()` asked clipboard managers to persist the transient transcript | The transcript is never stored; only the user's original clipboard is persisted again after restoration |
 | Medium | A crafted WAV chunk could request a multi-gigabyte allocation or claim bytes beyond EOF | Parsing uses a fixed-size format buffer and validates every chunk against the regular file size |
 | Medium | Resolving the runtime beside the current working directory could execute a lookalike inference binary from another Go project | Runtime discovery is anchored beside the resolved Vox executable |
 | Medium | Predictable fallback runtime paths did not consistently reject symlinks, foreign ownership, or broad modes | Go, shell, and overlay paths validate ownership/type and enforce mode `0700`; fallback paths are now consistent |
@@ -70,10 +70,11 @@ changes. Results describe this repository at the version and date above.
 1. **X11 is not an isolation boundary.** Another client in the same X11 session
    can potentially observe windows, synthetic input, or clipboard ownership.
    Wayland support will require a different, permission-aware insertion design.
-2. **Clipboard observers may still see changes.** Removing `clipboard.store()`
-   avoids explicitly requesting persistence, but a clipboard-history tool may
-   independently record any ownership change. Disable clipboard history for
-   highly sensitive dictation or use the tmux path.
+2. **Clipboard observers may still see changes.** Vox never calls
+   `clipboard.store()` while the transcript owns the selection, but a
+   clipboard-history tool may independently record any ownership change.
+   Disable clipboard history for highly sensitive dictation or use the tmux
+   path.
 3. **Failure artifacts are intentionally retained.** Audio or transcripts needed
    for recovery remain in the private runtime directory after some failures.
    Inspect and delete them after recovery; the login runtime is normally cleared

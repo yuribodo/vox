@@ -89,7 +89,9 @@ The overlay uses a GTK notification window that:
 6. It temporarily publishes the transcript without requesting clipboard-manager
    persistence, reactivates the captured window, and sends `Ctrl+V` with
    modifiers cleared.
-7. It restores the previous clipboard content after the paste event.
+7. It keeps the GTK event loop active while the destination requests the X11
+   selection, then restores and re-publishes only the previous clipboard
+   content.
 8. The controller deletes successful transcript/target state and publishes the
    `done` state. The toggle deletes successful audio and recording state.
 
