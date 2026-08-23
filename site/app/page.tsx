@@ -29,7 +29,7 @@ export default function Home() {
     <LandingMotion>
       <a className="skip-link" href="#main">Skip to content</a>
 
-      <header className="site-header" data-intro>
+      <header className="site-header" data-header>
         <a className="brand" href="#top" aria-label="Vox home">
           <span aria-hidden="true" /> vox
         </a>
@@ -43,15 +43,16 @@ export default function Home() {
       <main id="main">
         <section className="hero" id="top" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <p className="eyebrow" data-intro>Open source · built for Linux</p>
-            <h1 id="hero-title" data-intro>
-              Dictate anywhere.<br /><span>Keep it local.</span>
+            <p className="eyebrow" data-hero-fade>Open source · built for Linux</p>
+            <h1 id="hero-title">
+              <span className="hero-line"><span data-hero-line>Dictate anywhere.</span></span>
+              <span className="hero-line hero-line-muted"><span data-hero-line>Keep it local.</span></span>
             </h1>
-            <p className="hero-description" data-intro>
+            <p className="hero-description" data-hero-fade>
               Hold <kbd>Super + V</kbd>, speak, and release. Vox turns your voice
               into text on your machine, then returns it to your cursor.
             </p>
-            <div className="hero-actions" data-intro>
+            <div className="hero-actions" data-hero-fade>
               <MotionLink className="button button-primary" href="#install">
                 Install Vox
               </MotionLink>
@@ -61,23 +62,44 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="signal" data-signal aria-label="Voice becomes text locally">
+          <div className="signal" data-signal aria-label="Voice is captured, transcribed locally, and returned as text">
             <div className="signal-meta">
-              <span><i aria-hidden="true" /> listening</span>
+              <span><i aria-hidden="true" /><span data-signal-status>ready / local</span></span>
               <code>SUPER + V</code>
             </div>
-            <svg viewBox="0 0 1000 116" role="img" aria-label="A voice waveform resolving into a straight text line">
-              <path className="signal-guide" d="M1 58H999" />
-              <path
-                className="signal-wave"
-                data-signal-path
-                d="M1 58H92c14 0 17-22 31-22s19 52 34 52 17-71 34-71 20 90 38 90 19-79 37-79 20 59 38 59 18-42 35-42s20 28 38 28 19-17 36-17 19 9 37 9h120c16 0 23-7 39-7h424"
-              />
-              <circle data-signal-dot cx="508" cy="58" r="5" />
-            </svg>
-            <div className="signal-output">
-              <span>release</span>
-              <p>Voice becomes text right here.</p>
+            <div className="signal-stage">
+              <svg viewBox="0 0 1000 180" role="img" aria-label="A waveform enters a local processor and resolves into transcript lines">
+                <g className="signal-grid" aria-hidden="true">
+                  <path d="M1 45H999M1 90H999M1 135H999" />
+                  <path d="M125 1V179M250 1V179M375 1V179M625 1V179M750 1V179M875 1V179" />
+                </g>
+                <path
+                  className="signal-wave"
+                  data-signal-path
+                  d="M1 90H52c10 0 13-18 24-18s13 40 25 40 14-70 28-70 15 102 31 102 16-117 33-117 18 126 36 126 17-108 34-108s17 80 34 80 18-52 35-52 18 31 35 31 17-17 34-17 18 8 35 8h61"
+                />
+                <path className="processor-link" d="M477 90H536" />
+                <g className="processor" data-processor>
+                  <circle className="processor-ring" cx="566" cy="90" r="28" />
+                  <circle className="processor-core" cx="566" cy="90" r="5" />
+                  <path d="M566 62V48M566 132V118M538 90H524M608 90H594" />
+                </g>
+                <g className="transcript-lines" data-transcript-lines>
+                  <path d="M625 58H950" />
+                  <path d="M625 80H875" />
+                  <path d="M625 102H924" />
+                  <path d="M625 124H790" />
+                </g>
+              </svg>
+              <div className="signal-labels" aria-hidden="true">
+                <span>voice / PipeWire</span>
+                <span>local decode</span>
+                <span>text / cursor</span>
+              </div>
+            </div>
+            <div className="signal-output" data-signal-result>
+              <span>output</span>
+              <p>Voice becomes text right here.<i aria-hidden="true" /></p>
             </div>
           </div>
         </section>
@@ -116,7 +138,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="commands" data-reveal>
+          <div className="commands">
             <div className="command-row">
               <span>1</span>
               <code>{cloneCommand}</code>

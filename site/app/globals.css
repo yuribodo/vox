@@ -1,11 +1,12 @@
 :root {
-  --background: #f6f7f4;
-  --surface: #ffffff;
-  --ink: #17181a;
-  --muted: #70726f;
-  --line: #dfe1dc;
-  --blue: #4f6ef7;
-  --blue-soft: #e9edff;
+  --background: #0c0e12;
+  --surface: #13161b;
+  --surface-raised: #181c22;
+  --ink: #f1f3f5;
+  --muted: #8e959f;
+  --line: #292e37;
+  --blue: #8297ff;
+  --blue-soft: #14192b;
   --sans: "Manrope Variable", "Helvetica Neue", Arial, sans-serif;
   --mono: "IBM Plex Mono", monospace;
   --content: 1180px;
@@ -55,7 +56,7 @@ kbd {
   padding: 10px 14px;
   border-radius: 8px;
   background: var(--ink);
-  color: white;
+  color: var(--background);
   font: 500 0.75rem/1 var(--mono);
   transform: translateY(-160%);
   transition: transform 160ms var(--ease-out);
@@ -101,7 +102,7 @@ kbd {
   display: flex;
   align-items: center;
   gap: clamp(20px, 3vw, 40px);
-  color: #4f514e;
+  color: #9ba2ac;
   font-size: 0.82rem;
   font-weight: 550;
 }
@@ -137,8 +138,17 @@ kbd {
   line-height: 0.98;
 }
 
-.hero h1 span {
-  color: #777a76;
+.hero-line {
+  display: block;
+  overflow: hidden;
+}
+
+.hero-line > span {
+  display: block;
+}
+
+.hero-line-muted > span {
+  color: #6f7782;
 }
 
 .hero-description {
@@ -154,7 +164,7 @@ kbd {
   padding: 2px 6px;
   border: 1px solid var(--line);
   border-radius: 5px;
-  background: var(--surface);
+  background: var(--surface-raised);
   color: var(--ink);
   font-family: var(--mono);
   font-size: 0.78em;
@@ -185,23 +195,26 @@ kbd {
 
 .button-primary {
   background: var(--blue);
-  color: white;
-  box-shadow: 0 1px 2px rgba(23, 24, 26, 0.12);
+  color: #0b0e14;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
 }
 
 .button-secondary {
   border-color: var(--line);
-  background: rgba(255, 255, 255, 0.55);
-  color: #484a47;
+  background: rgba(255, 255, 255, 0.025);
+  color: #c4c9d0;
 }
 
 .signal {
   width: 100%;
-  max-width: 980px;
+  max-width: 1020px;
   margin: clamp(78px, 10vw, 120px) auto 0;
   padding: 18px 0 16px;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.16);
 }
 
 .signal-meta,
@@ -216,6 +229,7 @@ kbd {
 }
 
 .signal-meta {
+  padding: 0 18px;
   color: var(--muted);
 }
 
@@ -232,36 +246,95 @@ kbd {
   background: var(--blue);
 }
 
+.signal-stage {
+  position: relative;
+  margin-top: 8px;
+}
+
 .signal svg {
   width: 100%;
-  height: 94px;
+  height: 170px;
   display: block;
   overflow: visible;
 }
 
-.signal-guide,
 .signal-wave {
   fill: none;
   vector-effect: non-scaling-stroke;
 }
 
-.signal-guide {
-  stroke: #e8e9e5;
+.signal-grid path {
+  fill: none;
+  stroke: #20242b;
   stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
 
 .signal-wave {
-  stroke: var(--ink);
+  stroke: #dce1e7;
+  stroke-width: 1.4;
+}
+
+.processor-link,
+.processor path,
+.transcript-lines path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.processor-link {
+  stroke: #555e6a;
+  stroke-width: 1;
+}
+
+.processor-ring {
+  fill: var(--surface);
+  stroke: var(--blue);
   stroke-width: 1.25;
 }
 
-.signal circle {
+.processor-core {
   fill: var(--blue);
+}
+
+.processor path {
+  stroke: var(--blue);
+  stroke-width: 1;
+}
+
+.transcript-lines path {
+  stroke: #b9c0ca;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+
+.signal-labels {
+  position: absolute;
+  right: 18px;
+  bottom: 3px;
+  left: 18px;
+  display: grid;
+  grid-template-columns: 1fr 0.42fr 1fr;
+  color: #69717d;
+  font: 400 0.54rem/1 var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.signal-labels > :nth-child(2) {
+  justify-self: center;
+}
+
+.signal-labels > :last-child {
+  justify-self: end;
 }
 
 .signal-output {
   justify-content: flex-start;
   gap: clamp(24px, 8vw, 96px);
+  margin: 12px 18px 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
   color: var(--muted);
 }
 
@@ -273,6 +346,15 @@ kbd {
   font-weight: 540;
   letter-spacing: -0.01em;
   text-transform: none;
+}
+
+.signal-output p i {
+  width: 1px;
+  height: 1em;
+  display: inline-block;
+  margin-left: 4px;
+  background: var(--blue);
+  vertical-align: -0.12em;
 }
 
 .how {
@@ -323,7 +405,7 @@ kbd {
 
 .detail-number,
 .detail-list code {
-  color: #90928e;
+  color: #727a85;
   font-family: var(--mono);
   font-size: 0.64rem;
   letter-spacing: 0.05em;
@@ -352,6 +434,7 @@ kbd {
 .install {
   margin-bottom: 28px;
   padding: clamp(72px, 9vw, 112px);
+  border: 1px solid #29314d;
   border-radius: 24px;
   background: var(--blue-soft);
 }
@@ -365,7 +448,7 @@ kbd {
 
 .commands {
   margin-top: clamp(70px, 8vw, 100px);
-  border-top: 1px solid #c7cde8;
+  border-top: 1px solid #303955;
 }
 
 .command-row {
@@ -374,7 +457,7 @@ kbd {
   grid-template-columns: 36px minmax(0, 1fr) auto;
   gap: 18px;
   align-items: center;
-  border-bottom: 1px solid #c7cde8;
+  border-bottom: 1px solid #303955;
 }
 
 .command-row > span,
@@ -384,13 +467,13 @@ kbd {
 }
 
 .command-row > span {
-  color: #7a82a8;
+  color: #737c9f;
   font-size: 0.62rem;
 }
 
 .command-row > code {
   overflow: hidden;
-  color: #272a37;
+  color: #d9ddea;
   font-size: clamp(0.72rem, 1vw, 0.86rem);
   line-height: 1.5;
   text-overflow: ellipsis;
@@ -404,10 +487,10 @@ kbd {
   justify-content: space-between;
   gap: 12px;
   padding: 9px 11px;
-  border: 1px solid #b9c1e3;
+  border: 1px solid #3d486b;
   border-radius: 7px;
-  background: rgba(255, 255, 255, 0.42);
-  color: #424966;
+  background: rgba(255, 255, 255, 0.025);
+  color: #aeb9df;
   font-size: 0.62rem;
   text-transform: uppercase;
   transition: transform 140ms var(--ease-out), background-color 160ms ease, border-color 160ms ease;
@@ -424,7 +507,7 @@ kbd {
 .copy-button.is-copied {
   border-color: var(--blue);
   background: var(--blue);
-  color: white;
+  color: #0b0e14;
 }
 
 .install-footer {
@@ -446,15 +529,15 @@ kbd {
 
 .install-footer li {
   padding: 7px 9px;
-  border: 1px solid #c7cde8;
+  border: 1px solid #35405f;
   border-radius: 6px;
-  color: #5e6688;
+  color: #939fc7;
   font: 500 0.58rem/1 var(--mono);
   text-transform: uppercase;
 }
 
 .install-footer > a {
-  color: #354cae;
+  color: #9eafff;
   font-size: 0.78rem;
   font-weight: 620;
   white-space: nowrap;
@@ -499,17 +582,17 @@ kbd {
   }
 
   .button-primary:hover {
-    background: #415fdc;
+    background: #96a8ff;
   }
 
   .button-secondary:hover,
   .copy-button:hover {
-    border-color: #bfc2bc;
-    background: var(--surface);
+    border-color: #4a5260;
+    background: var(--surface-raised);
   }
 
   .install-footer > a:hover {
-    color: #22378d;
+    color: #c0caff;
   }
 }
 
