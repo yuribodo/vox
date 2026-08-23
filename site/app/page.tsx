@@ -2,29 +2,30 @@ import Image from "next/image";
 import { CopyCommand } from "../components/CopyCommand";
 import { LandingMotion } from "../components/LandingMotion";
 import { MotionLink } from "../components/MotionLink";
-import { SpecimenPoster } from "../components/SpecimenPoster";
 
 const repository = "https://github.com/yuribodo/vox";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const cloneCommand = "git clone https://github.com/yuribodo/vox.git && cd vox";
+const buildCommand = "make build && make fetch-whisper && make doctor";
 
-const steps = [
+const flow = [
   {
     number: "01",
-    name: "capture",
-    description: "Hold Super + V and speak. PipeWire records a clean local audio buffer.",
-    detail: "16 kHz / PCM",
+    verb: "hold",
+    shortcut: "SUPER + V",
+    copy: "Vox starts a clean 16 kHz recording through PipeWire.",
   },
   {
     number: "02",
-    name: "transcribe",
-    description: "Whisper and Silero VAD turn the signal into words on your NVIDIA GPU.",
-    detail: "large-v3-turbo / CUDA",
+    verb: "speak",
+    shortcut: "LOCAL CUDA",
+    copy: "Whisper and Silero VAD decode speech on your own GPU.",
   },
   {
     number: "03",
-    name: "insert",
-    description: "Vox returns to the original field and pastes. It never presses Enter.",
-    detail: "clipboard / no submit",
+    verb: "release",
+    shortcut: "CURSOR ← TEXT",
+    copy: "The transcript returns to the field you left. Vox never submits it.",
   },
 ];
 
@@ -34,156 +35,126 @@ export default function Home() {
       <a className="skip-link" href="#main">Skip to content</a>
 
       <header className="site-header" data-intro>
-        <a className="brand" href="#top" aria-label="Vox home">
-          <span className="brand-glyph" aria-hidden="true">v<span>o</span>x</span>
-          <span className="brand-note">local voice interface</span>
-        </a>
-
-        <div className="header-coordinate" aria-hidden="true">
-          <span>LINUX / X11</span>
-          <span>40.7128°N</span>
-        </div>
-
+        <a className="brand" href="#top" aria-label="Vox home">vox<span>/</span></a>
+        <p className="header-status"><i aria-hidden="true" /> open source · local only</p>
         <MotionLink className="header-link" href={repository}>
-          source <span aria-hidden="true">↗</span>
+          GitHub <span aria-hidden="true">↗</span>
         </MotionLink>
       </header>
 
       <main id="main">
         <section className="hero" id="top" aria-labelledby="hero-title">
-          <div className="hero-specimen" data-specimen>
-            <SpecimenPoster />
+          <div className="hero-media" data-hero-media>
+            <Image
+              alt="A machined acoustic diaphragm turning a pressure wave into precise horizontal signal lines"
+              src={`${basePath}/images/resonance.webp`}
+              fill
+              priority
+              sizes="100vw"
+            />
+            <div className="hero-shade" />
           </div>
 
-          <div className="hero-title-wrap">
-            <p className="hero-kicker" data-intro>
-              <span>voice specimen 001</span>
-              <span>/dev/vox</span>
+          <div className="hero-copy">
+            <p className="eyebrow" data-hero-copy>
+              <span>push-to-talk for Linux</span>
+              <span>v0.1 / X11</span>
             </p>
-            <h1 id="hero-title" aria-label="Voice in. Text out. Nothing leaves.">
-              <span data-intro>voice in.</span>
-              <span data-intro>text out.</span>
-              <span className="hero-title-accent" data-intro>nothing leaves.</span>
+            <h1 id="hero-title" data-hero-copy>
+              <span>Speak anywhere.</span>
+              <span className="hero-accent">Send nowhere.</span>
             </h1>
-          </div>
-
-          <div className="hero-detail" data-intro>
-            <p>
-              Push-to-talk dictation for Linux. Audio becomes text on your
-              machine, then lands exactly where your cursor was.
-            </p>
-            <div className="hero-actions">
-              <MotionLink className="action action-primary" href="#install">
-                install vox <span aria-hidden="true">↓</span>
-              </MotionLink>
-              <MotionLink className="action action-quiet" href={repository}>
-                inspect the source <span aria-hidden="true">↗</span>
-              </MotionLink>
+            <div className="hero-summary" data-hero-copy>
+              <p>
+                Hold <kbd>Super + V</kbd>, talk, release. Vox transcribes on your
+                machine and puts the words back at your cursor.
+              </p>
+              <div className="hero-actions">
+                <MotionLink className="button button-solid" href="#install">
+                  Get Vox <span aria-hidden="true">↓</span>
+                </MotionLink>
+                <MotionLink className="button button-ghost" href={repository}>
+                  Read the source <span aria-hidden="true">↗</span>
+                </MotionLink>
+              </div>
             </div>
           </div>
 
-          <div className="hero-calibration" aria-hidden="true" data-intro>
-            <span>REC</span>
-            <i />
-            <span>00:06.4</span>
+          <div className="hero-readout" data-hero-copy aria-hidden="true">
+            <span>INPUT / 16 KHZ</span>
+            <span className="readout-line"><i /></span>
+            <span>DEVICE / YOURS</span>
           </div>
         </section>
 
-        <section className="story" id="signal" aria-labelledby="story-title">
-          <header className="story-heading" data-reveal>
-            <p className="section-label"><span>01</span> the signal</p>
-            <h2 id="story-title">the whole trip<br />stays on this desk.</h2>
-            <p>
-              Vox keeps the path short: microphone, local model, cursor. No
-              account, no upload, no hidden handoff.
+        <section className="protocol" id="how" aria-labelledby="protocol-title">
+          <header className="protocol-header" data-reveal>
+            <p className="section-index">01 / THE LOCAL LOOP</p>
+            <h2 id="protocol-title">Three moves.<br />Zero network.</h2>
+            <p className="protocol-intro">
+              A short path from microphone to cursor. Every stage happens on the
+              machine already in front of you.
             </p>
           </header>
 
-          <figure className="editorial-specimen story-specimen" data-section-image>
-            <div className="specimen-image" data-image-inner>
-              <Image
-                alt="Microphone diaphragm connected to a printed waveform, signal board and two blank transcript slips"
-                src={`${basePath}/images/signal-specimen.webp`}
-                fill
-                sizes="(max-width: 720px) 100vw, 94vw"
-              />
-            </div>
-            <figcaption>
-              <span>FIG. V—002</span>
-              <span>signal / decode / return</span>
-            </figcaption>
-          </figure>
-
-          <ol className="story-steps" data-step-list id="signal-steps">
-            {steps.map((step) => (
-              <li key={step.name}>
-                <div className="step-heading">
-                  <span>{step.number}</span>
-                  <h3>{step.name}</h3>
+          <ol className="flow" data-flow>
+            {flow.map((item) => (
+              <li key={item.verb} data-flow-row>
+                <span className="flow-number">{item.number}</span>
+                <h3>{item.verb}</h3>
+                <div className="flow-detail">
+                  <code>{item.shortcut}</code>
+                  <p>{item.copy}</p>
                 </div>
-                <p>{step.description}</p>
-                <code>{step.detail}</code>
+                <span className="flow-rule" aria-hidden="true"><i /></span>
               </li>
             ))}
           </ol>
+
+          <p className="protocol-statement" data-reveal>
+            No account. No upload.<br /><span>No accidental send.</span>
+          </p>
         </section>
 
-        <section className="build" id="install" aria-labelledby="build-title">
-          <header className="build-heading" data-reveal>
-            <p className="section-label"><span>02</span> your machine</p>
-            <h2 id="build-title">you own<br />the listener.</h2>
+        <section className="install" id="install" aria-labelledby="install-title">
+          <div className="install-top" data-reveal>
+            <p className="section-index">02 / BUILD IT</p>
+            <h2 id="install-title">Your machine.<br />Your listener.</h2>
             <p>
-              Vox is open source and runs where you work: Cinnamon on X11,
-              PipeWire, Whisper and NVIDIA CUDA.
+              Vox is MIT-licensed. Inspect every line, change the hotkey, swap
+              the model, or keep it exactly as it is.
             </p>
-          </header>
+          </div>
 
-          <figure className="editorial-specimen build-specimen" data-section-image>
-            <div className="specimen-image" data-image-inner>
-              <Image
-                alt="Mechanical keys, aluminum heatsink, circuit board, USB cable and precision tools arranged as a Linux workstation specimen"
-                src={`${basePath}/images/machine-specimen.webp`}
-                fill
-                sizes="(max-width: 720px) 100vw, 94vw"
-              />
+          <div className="command-list" data-reveal>
+            <div className="command-line">
+              <span>01</span>
+              <code>{cloneCommand}</code>
+              <CopyCommand command={cloneCommand} />
             </div>
-            <figcaption>
-              <span>FIG. V—003</span>
-              <span>workstation kit / local compute</span>
-            </figcaption>
-          </figure>
-
-          <div className="install-sheet" data-reveal>
-            <div className="install-sheet-title">
-              <span>quick start</span>
-              <span>2 commands</span>
-            </div>
-
-            <div className="command-row">
-              <span className="command-index">01</span>
-              <code>git clone https://github.com/yuribodo/vox.git &amp;&amp; cd vox</code>
-              <CopyCommand command="git clone https://github.com/yuribodo/vox.git && cd vox" />
-            </div>
-            <div className="command-row">
-              <span className="command-index">02</span>
-              <code>make build &amp;&amp; make fetch-whisper &amp;&amp; make doctor</code>
-              <CopyCommand command="make build && make fetch-whisper && make doctor" />
-            </div>
-
-            <div className="requirements">
-              <span>Cinnamon / X11</span><span>PipeWire</span><span>NVIDIA CUDA</span><span>Go 1.26</span>
+            <div className="command-line">
+              <span>02</span>
+              <code>{buildCommand}</code>
+              <CopyCommand command={buildCommand} />
             </div>
           </div>
 
-          <footer className="build-footer" data-reveal>
-            <MotionLink className="action action-primary" href={`${repository}#install-and-start-using-vox`}>
-              read the install guide <span aria-hidden="true">↗</span>
+          <div className="install-bottom" data-reveal>
+            <ul aria-label="Requirements">
+              <li>Cinnamon / X11</li>
+              <li>PipeWire</li>
+              <li>NVIDIA CUDA</li>
+              <li>Go 1.26</li>
+            </ul>
+            <MotionLink className="install-link" href={`${repository}#install-and-start-using-vox`}>
+              Full installation guide <span aria-hidden="true">↗</span>
             </MotionLink>
-            <div className="footer-meta">
-              <span>MIT / open source</span>
-              <a href="third-party-licenses.txt">third-party licenses</a>
-              <span>© 2026 contributors</span>
-            </div>
+          </div>
+
+          <footer className="site-footer">
+            <span>VOX / 2026</span>
+            <span>MIT OPEN SOURCE</span>
+            <a href="third-party-licenses.txt">LICENSES ↗</a>
           </footer>
         </section>
       </main>

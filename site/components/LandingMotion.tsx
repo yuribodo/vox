@@ -17,53 +17,66 @@ export function LandingMotion({ children }: Readonly<{ children: ReactNode }>) {
       const media = gsap.matchMedia();
 
       media.add("(prefers-reduced-motion: no-preference)", () => {
-        const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
+        const intro = gsap.timeline({ defaults: { ease: "power4.out" } });
         intro
-          .from("[data-specimen]", { clipPath: "inset(0 100% 0 0)", duration: 1.15 })
-          .from("[data-intro]", { y: 18, autoAlpha: 0, duration: 0.65, stagger: 0.06 }, "-=0.68")
-          .from(".hero-calibration i", { scaleX: 0, duration: 0.7 }, "-=0.4");
+          .from("[data-hero-media]", {
+            clipPath: "inset(0 0 100% 0)",
+            scale: 1.035,
+            duration: 1.25,
+          })
+          .from("[data-intro]", { y: -10, autoAlpha: 0, duration: 0.45 }, "-=0.72")
+          .from(
+            "[data-hero-copy]",
+            { y: 28, autoAlpha: 0, duration: 0.7, stagger: 0.08 },
+            "-=0.58",
+          )
+          .from(".readout-line i", { scaleX: 0, duration: 0.7 }, "-=0.45");
 
-        gsap.to("[data-specimen]", {
-          yPercent: -3,
-          rotate: 0.5,
+        gsap.to("[data-hero-media]", {
+          scale: 1.075,
+          yPercent: 4,
           ease: "none",
-          scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 0.6 },
+          scrollTrigger: {
+            trigger: ".hero",
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.8,
+          },
         });
 
         gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((element) => {
           gsap.from(element, {
-            y: 20,
+            y: 26,
             autoAlpha: 0,
-            duration: 0.72,
+            duration: 0.7,
             ease: "power3.out",
-            scrollTrigger: { trigger: element, start: "top 86%", once: true },
+            scrollTrigger: { trigger: element, start: "top 84%", once: true },
           });
         });
 
-        gsap.utils.toArray<HTMLElement>("[data-section-image]").forEach((figure) => {
-          const image = figure.querySelector<HTMLElement>("[data-image-inner]");
+        gsap.utils.toArray<HTMLElement>("[data-flow-row]").forEach((row) => {
+          const rule = row.querySelector<HTMLElement>(".flow-rule i");
+          const content = row.querySelectorAll(".flow-number, h3, .flow-detail");
           const timeline = gsap.timeline({
-            scrollTrigger: { trigger: figure, start: "top 82%", once: true },
+            scrollTrigger: { trigger: row, start: "top 78%", once: true },
           });
 
-          timeline.from(figure, {
-            clipPath: "inset(0 100% 0 0)",
-            duration: 1.05,
-            ease: "power3.inOut",
+          timeline.from(content, {
+            y: 24,
+            autoAlpha: 0,
+            duration: 0.62,
+            stagger: 0.06,
+            ease: "power3.out",
           });
 
-          if (image) {
-            timeline.from(image, { scale: 1.035, duration: 1.05, ease: "power3.out" }, 0);
+          if (rule) {
+            timeline.from(rule, {
+              scaleX: 0,
+              transformOrigin: "left center",
+              duration: 0.8,
+              ease: "power3.inOut",
+            }, 0);
           }
-        });
-
-        gsap.from("[data-step-list] li", {
-          y: 14,
-          autoAlpha: 0,
-          duration: 0.58,
-          stagger: 0.07,
-          ease: "power3.out",
-          scrollTrigger: { trigger: "[data-step-list]", start: "top 84%", once: true },
         });
       });
 

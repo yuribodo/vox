@@ -11,7 +11,7 @@ under the MIT License.
 
 - The tracked tree contains no vendored dependency source, model weights,
   executable binaries, third-party screenshots, or recordings. The landing
-  page's three photographic specimens are original AI-assisted project assets
+  page's photographic hero artwork is an original AI-assisted project asset
   rather than copied third-party media. Its favicon is original source SVG.
 - The Next.js landing page downloads pinned npm dependencies during its build.
   Its static export redistributes client runtimes and self-hosted fonts under
@@ -37,8 +37,8 @@ under the MIT License.
 - Reviewed every tracked source, website asset, documentation, workflow,
   benchmark, and configuration file for third-party notices and suspicious
   copied blocks.
-- Enumerated tracked file types and reviewed the three original generated WebP
-  assets separately from third-party dependencies.
+- Enumerated tracked file types and reviewed the original generated WebP asset
+  separately from third-party dependencies.
 - Reviewed the pinned dependencies and their upstream license pages.
 - Removed internal product requirements, architectural decision records,
   rejected implementation code, and machine-specific inventory.

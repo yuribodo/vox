@@ -1488,11 +1488,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
 The following npm package may be included in this product:
 
- - @fontsource-variable/instrument-sans@5.3.0
+ - @fontsource-variable/geist@5.3.0
 
 This package contains the following license:
 
-Copyright 2022 The Instrument Sans Project Authors (https://github.com/Instrument/instrument-sans) InstrumentSans-Italic[wdth,wght].ttf: Copyright 2022 The Instrument Sans Project Authors (https://github.com/Instrument/instrument-sans)
+Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font) Geist-Italic[wght].ttf: Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
