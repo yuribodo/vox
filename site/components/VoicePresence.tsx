@@ -9,7 +9,7 @@ import {
   useTransform,
   type MotionValue,
 } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const BAR_COUNT = 56;
 const bars = Array.from({ length: BAR_COUNT }, (_, index) => index);
@@ -57,13 +57,14 @@ export function VoicePresence({ words }: VoicePresenceProps) {
   const playingRef = useRef(true);
   const lastSampleAt = useRef(0);
   const history = useRef(Array.from({ length: BAR_COUNT }, () => 0.1));
-  const levels = useRef(bars.map(() => motionValue(0.12))).current;
-  const energy = useRef(motionValue(0.14)).current;
+  const levels = useMemo(() => bars.map(() => motionValue(0.12)), []);
+  const energy = useMemo(() => motionValue(0.14), []);
   const glow = useSpring(energy, SPRING);
   const waveGlow = useTransform(glow, (level) => 0.05 + level * 0.2);
   const reduceMotion = useReducedMotion() ?? false;
   const [visibleCount, setVisibleCount] = useState(0);
   const lastCount = useRef(0);
+  const shownCount = reduceMotion ? words.length : visibleCount;
 
   useEffect(() => {
     const root = rootRef.current;
@@ -82,8 +83,7 @@ export function VoicePresence({ words }: VoicePresenceProps) {
       levels[index]?.set(rest);
     });
     energy.set(0.18);
-    setVisibleCount(words.length);
-  }, [energy, levels, reduceMotion, words.length]);
+  }, [energy, levels, reduceMotion]);
 
   useAnimationFrame((time) => {
     if (reduceMotion || !playingRef.current) return;
@@ -134,7 +134,7 @@ export function VoicePresence({ words }: VoicePresenceProps) {
             key={`${word}-${index}`}
             initial={false}
             animate={
-              index < visibleCount || reduceMotion
+              index < shownCount
                 ? { opacity: 1, transform: "translateY(0px)" }
                 : { opacity: 0, transform: "translateY(8px)" }
             }
