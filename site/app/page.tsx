@@ -1,6 +1,7 @@
 import { CopyCommand } from "../components/CopyCommand";
 import { LandingMotion } from "../components/LandingMotion";
 import { MotionLink } from "../components/MotionLink";
+import { VoicePresence } from "../components/VoicePresence";
 
 const repository = "https://github.com/yuribodo/vox";
 const cloneCommand = "git clone https://github.com/yuribodo/vox.git && cd vox";
@@ -8,21 +9,25 @@ const buildCommand = "make build && make fetch-whisper && make doctor";
 
 const details = [
   {
-    title: "Capture stays local",
-    description: "PipeWire records directly on your machine. There is no upload step.",
-    meta: "16 kHz / PCM",
+    title: "Listen",
+    description: "PipeWire captures your voice directly from the active microphone.",
+    meta: "PipeWire · 16 kHz",
   },
   {
-    title: "Your GPU does the work",
-    description: "Whisper and Silero VAD transcribe without an account or API key.",
-    meta: "CUDA / local model",
+    title: "Transcribe",
+    description: "Whisper and Silero VAD run on your GPU—no API key, no round trip.",
+    meta: "Whisper · CUDA",
   },
   {
-    title: "Text returns to the cursor",
-    description: "Release the shortcut and Vox pastes where you started. It never presses Enter.",
-    meta: "clipboard / no submit",
+    title: "Return",
+    description: "The transcript lands at your cursor. Vox pastes the words, never Enter.",
+    meta: "Clipboard · no submit",
   },
 ];
+
+const transcript = ["Voice", "becomes", "text", "exactly", "where", "you", "need", "it."];
+
+const privacy = ["No account", "No API key", "No remote retention"];
 
 export default function Home() {
   return (
@@ -62,79 +67,49 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="signal" data-signal aria-label="Voice is captured, transcribed locally, and returned as text">
-            <div className="signal-meta">
-              <span><i aria-hidden="true" /><span data-signal-status>ready / local</span></span>
-              <code>SUPER + V</code>
-            </div>
-            <div className="signal-stage">
-              <svg viewBox="0 0 1000 180" role="img" aria-label="A waveform enters a local processor and resolves into transcript lines">
-                <g className="signal-grid" aria-hidden="true">
-                  <path d="M1 45H999M1 90H999M1 135H999" />
-                  <path d="M125 1V179M250 1V179M375 1V179M625 1V179M750 1V179M875 1V179" />
-                </g>
-                <path
-                  className="signal-wave"
-                  data-signal-path
-                  d="M1 90H52c10 0 13-18 24-18s13 40 25 40 14-70 28-70 15 102 31 102 16-117 33-117 18 126 36 126 17-108 34-108s17 80 34 80 18-52 35-52 18 31 35 31 17-17 34-17 18 8 35 8h61"
-                />
-                <path className="processor-link" d="M477 90H536" />
-                <g className="processor" data-processor>
-                  <circle className="processor-ring" cx="566" cy="90" r="28" />
-                  <circle className="processor-core" cx="566" cy="90" r="5" />
-                  <path d="M566 62V48M566 132V118M538 90H524M608 90H594" />
-                </g>
-                <g className="transcript-lines" data-transcript-lines>
-                  <path d="M625 58H950" />
-                  <path d="M625 80H875" />
-                  <path d="M625 102H924" />
-                  <path d="M625 124H790" />
-                </g>
-              </svg>
-              <div className="signal-labels" aria-hidden="true">
-                <span>voice / PipeWire</span>
-                <span>local decode</span>
-                <span>text / cursor</span>
-              </div>
-            </div>
-            <div className="signal-output" data-signal-result>
-              <span>output</span>
-              <p>Voice becomes text right here.<i aria-hidden="true" /></p>
-            </div>
-          </div>
+          <VoicePresence words={transcript} />
         </section>
 
         <section className="how" id="how" aria-labelledby="how-title">
           <div className="section-heading" data-reveal>
             <p className="section-label">How it works</p>
-            <h2 id="how-title">Private by architecture,<br />not by policy.</h2>
+            <h2 id="how-title">A local loop.</h2>
             <p>
-              Vox has a deliberately short path from microphone to text. Every
-              part of that path is visible and runs locally.
+              From microphone to cursor without a server in between. The whole
+              path runs on hardware you control.
             </p>
           </div>
 
-          <ol className="detail-list">
-            {details.map((detail, index) => (
-              <li key={detail.title} data-detail>
-                <span className="detail-number">0{index + 1}</span>
-                <div>
+          <div className="loop-group">
+            <ol className="loop" data-loop>
+              {details.map((detail, index) => (
+                <li key={detail.title}>
+                  <span>0{index + 1}</span>
                   <h3>{detail.title}</h3>
                   <p>{detail.description}</p>
-                </div>
-                <code>{detail.meta}</code>
-              </li>
-            ))}
-          </ol>
+                  <code>{detail.meta}</code>
+                </li>
+              ))}
+            </ol>
+            <div className="privacy-bar" data-reveal>
+              <p>
+                <strong>0 B</strong>
+                uploaded
+              </p>
+              <ul aria-label="Privacy guarantees">
+                {privacy.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          </div>
         </section>
 
         <section className="install" id="install" aria-labelledby="install-title">
           <div className="install-copy" data-reveal>
             <p className="section-label">Get started</p>
-            <h2 id="install-title">Two commands.<br />Then talk.</h2>
+            <h2 id="install-title">Ready in two commands.</h2>
             <p>
-              Vox targets Cinnamon on X11 with PipeWire and NVIDIA CUDA. The
-              doctor command checks your machine before you begin.
+              Clone, build, and let the doctor check your setup. Your voice
+              never needs an account to get started.
             </p>
           </div>
 
