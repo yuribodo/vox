@@ -3,6 +3,14 @@
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Desktop paste into terminals (kitty, Alacritty, GNOME Terminal, Konsole, and
+  others) now uses `Ctrl+Shift+V` and flattens the transcript to a single line
+  so it can never submit the shell prompt.
+
 ## [0.1.0] - 2026-08-23
 
 ### Added

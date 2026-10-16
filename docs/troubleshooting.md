@@ -134,6 +134,13 @@ inspect it before starting a new dictation, because the next start archives a
 stale desktop transcript with a timestamp.
 
 X11 paste depends on `xdotool` and a functioning Cinnamon clipboard manager.
+
+Terminals paste with `Ctrl+Shift+V`. Vox detects common terminals through
+`xprop WM_CLASS`; if your terminal receives a literal `^V` instead of the text,
+check its class with `xprop WM_CLASS` (then click the window) and either add it
+to `TERMINAL_CLASSES` in `scripts/vox_paste_keys.py` or set `VOX_PASTE_KEY`
+(for example `ctrl+shift+v` or `shift+Insert`) in the environment that runs the
+shortcut.
 Wayland is not supported by this integration.
 
 ## `Nenhuma fala detectada`

@@ -88,7 +88,10 @@ The overlay uses a GTK notification window that:
 5. The X11 helper snapshots existing clipboard text or image content.
 6. It temporarily publishes the transcript without requesting clipboard-manager
    persistence, reactivates the captured window, and sends `Ctrl+V` with
-   modifiers cleared.
+   modifiers cleared. Terminals detected by their `WM_CLASS` receive
+   `Ctrl+Shift+V` instead; `VOX_PASTE_KEY` overrides the key. Terminal pastes
+   (and any override) replace newlines and control characters with spaces so
+   the transcript cannot submit a shell line or end a bracketed paste early.
 7. It keeps the GTK event loop active while the destination requests the X11
    selection, then restores and re-publishes only the previous clipboard
    content.

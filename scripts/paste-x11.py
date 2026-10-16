@@ -14,6 +14,8 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, Gtk  # noqa: E402
 
+from vox_paste_keys import prepare_paste  # noqa: E402
+
 
 @dataclass
 class ClipboardSnapshot:
@@ -89,6 +91,9 @@ def paste(window_id: str, text: str) -> None:
         raise ValueError("refusing to paste text containing NUL")
 
     xdotool("getwindowname", window_id)
+    paste_key, text = prepare_paste(window_id, text)
+    if not text:
+        raise ValueError("refusing to paste empty text")
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
     snapshot = snapshot_clipboard(clipboard)
     try:
@@ -96,7 +101,7 @@ def paste(window_id: str, text: str) -> None:
         # that would ask a clipboard manager to retain sensitive dictated text.
         set_text(clipboard, text)
         xdotool("windowactivate", "--sync", window_id)
-        xdotool("key", "--clearmodifiers", "ctrl+v")
+        xdotool("key", "--clearmodifiers", paste_key)
         # Clipboard transfer is asynchronous on X11. Electron and other clients
         # request the selection after the key event; sleeping here would stop
         # GTK from answering and can make the destination appear frozen.

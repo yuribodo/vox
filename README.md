@@ -57,7 +57,7 @@ benchmark the project.
 | --- | --- |
 | OS/session | Linux, Cinnamon desktop, X11 |
 | Audio | PipeWire with `pw-record`/`pw-dump`; WirePlumber with `wpctl` |
-| Desktop integration | Python 3, PyGObject, GTK 3, `xdotool`, `jq`, `flock`, `setsid` |
+| Desktop integration | Python 3, PyGObject, GTK 3, `xdotool`, `xprop`, `jq`, `flock`, `setsid` |
 | Build | Go 1.26, Git, curl, tar, SHA-256 tools, Make |
 | Inference | NVIDIA driver, CUDA toolkit, GCC/G++ 15 |
 | GPU target | CUDA compute capability 8.6 |
@@ -69,7 +69,7 @@ the matching packages there with:
 ```bash
 sudo pacman -S --needed \
   go git curl tar make coreutils util-linux \
-  pipewire-audio wireplumber tmux xdotool jq python-gobject gtk3 \
+  pipewire-audio wireplumber tmux xdotool xorg-xprop jq python-gobject gtk3 \
   cuda gcc15
 ```
 
@@ -171,7 +171,10 @@ is preserved. The discarded audio is never transcribed or pasted.
 
 On the second press, Vox finalizes the WAV, runs local inference, writes the
 exact transcript to a private file, reactivates the captured window, and sends
-`Ctrl+V`. It temporarily owns the clipboard only for the paste and restores the
+`Ctrl+V` (`Ctrl+Shift+V` when the window is a known terminal such as kitty,
+Alacritty, or GNOME Terminal). Terminal pastes are flattened to one line, with
+newlines and control characters replaced by spaces, so a shell without
+bracketed paste can never treat the transcript as Enter. It temporarily owns the clipboard only for the paste and restores the
 previous text or image afterward.
 
 Successful dictations delete their temporary audio, transcript, and state.
