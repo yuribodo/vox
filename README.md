@@ -31,6 +31,10 @@ submits a prompt, or executes transcribed text.
 
 `Ctrl+Alt+Space` is installed as a fallback shortcut.
 
+Text went to the wrong place, for example because you switched browser tabs
+while speaking? Focus the right field and press `Super+Shift+V`: Vox pastes your
+latest transcript again into the window that is focused now.
+
 ## Features
 
 - Global toggle-to-talk shortcut on Cinnamon/X11.
@@ -44,6 +48,8 @@ submits a prompt, or executes transcribed text.
 - Captured destination window: changing focus while speaking does not redirect
   the final text.
 - Clipboard restoration after paste for existing text or image content.
+- `Super+Shift+V` pastes the latest transcript again into the focused window,
+  from a small private local history (last 50 transcripts).
 - Direct tmux insertion path for terminal-native workflows.
 - No automatic Enter under any insertion path.
 - Reproducible, checksum-pinned model and runtime preparation.
@@ -118,7 +124,8 @@ Run this from a graphical Cinnamon/X11 session:
 make desktop-shortcut
 ```
 
-This installs `Super+V` and the fallback `Ctrl+Alt+Space` for the current user.
+This installs `Super+V`, the fallback `Ctrl+Alt+Space`, and `Super+Shift+V`
+(paste the latest transcript again) for the current user.
 The shortcut points to this checkout, so keep the repository in place. If it is
 moved, rebuild Vox and run `make desktop-shortcut` again.
 
@@ -139,7 +146,7 @@ does not need a background daemon or login service.
 make remove-desktop-shortcut
 ```
 
-The installer and remover are idempotent. They manage only the two Vox custom
+The installer and remover are idempotent. They manage only the three Vox custom
 keybindings and refuse to replace another custom shortcut using the same keys.
 
 ## What happens during a dictation
@@ -177,7 +184,15 @@ newlines and control characters replaced by spaces, so a shell without
 bracketed paste can never treat the transcript as Enter. It temporarily owns the clipboard only for the paste and restores the
 previous text or image afterward.
 
-Successful dictations delete their temporary audio, transcript, and state.
+Before pasting, Vox appends the transcript to its local history, so a paste
+into the wrong tab or a failed paste never loses the text. `Super+Shift+V`
+pastes the newest history entry into the window focused at that moment. It is
+ignored while Vox is recording or busy (transcribing or pasting), so it cannot
+interrupt a dictation. To recover an older entry, list the saved texts with
+`jq -r .text ~/.local/share/vox/history.jsonl | tail`.
+
+Successful dictations delete their temporary audio, transcript, and state; a
+copy of the text stays in the history unless `VOX_HISTORY=0`.
 Failures preserve useful recovery artifacts and expose a short message in the
 Flow Bar; technical detail stays in the runtime logs.
 
@@ -245,6 +260,13 @@ Vox treats every transcript as untrusted text.
   and local runtimes are gitignored.
 - Failed audio is preserved so it can be inspected or recovered. The user
   runtime directory is normally cleared when the login session or machine ends.
+- Transcript history: every transcript is saved, before it is pasted, to
+  `${XDG_DATA_HOME:-~/.local/share}/vox/history.jsonl` with its timestamp
+  and text (no window titles). The directory is `0700` and the file
+  `0600`; only the last 50 entries are kept. This file survives reboots. Clear
+  it with `scripts/vox_history.py clear`. Disable it by setting `VOX_HISTORY=0`
+  in the environment of the shortcut (for example in `~/.xsessionrc`); then
+  nothing is written and `Super+Shift+V` reports that history is disabled.
 
 See [Architecture and safety invariants](docs/architecture.md) and the
 [security audit](docs/security-audit.md) for the full state machine, threat

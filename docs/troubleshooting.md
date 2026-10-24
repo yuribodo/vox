@@ -39,7 +39,7 @@ printf 'desktop=%s session=%s\n' \
   "$XDG_CURRENT_DESKTOP" "$XDG_SESSION_TYPE"
 ```
 
-Expected values include `X-Cinnamon` and `x11`. Reinstall both managed
+Expected values include `X-Cinnamon` and `x11`. Reinstall the managed
 shortcuts idempotently:
 
 ```bash
@@ -56,9 +56,13 @@ gsettings get \
 gsettings get \
   org.cinnamon.desktop.keybindings.custom-keybinding:/org/cinnamon/desktop/keybindings/custom-keybindings/vox-toggle-fallback/ \
   binding
+gsettings get \
+  org.cinnamon.desktop.keybindings.custom-keybinding:/org/cinnamon/desktop/keybindings/custom-keybindings/vox-paste-last/ \
+  binding
 ```
 
-Expected bindings are `['<Super>v']` and `['<Control><Alt>space']`.
+Expected bindings are `['<Super>v']`, `['<Control><Alt>space']`, and
+`['<Super><Shift>v']`.
 
 ## The Flow Bar does not appear
 

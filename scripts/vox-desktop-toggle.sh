@@ -7,6 +7,7 @@ readonly vox_binary="${project_root}/vox"
 readonly overlay_script="${project_root}/scripts/vox-overlay.py"
 readonly paste_script="${project_root}/scripts/paste-x11.py"
 readonly sources_script="${project_root}/scripts/vox_audio_sources.py"
+readonly history_script="${project_root}/scripts/vox_history.py"
 if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then
   [[ "$XDG_RUNTIME_DIR" == /* && "$XDG_RUNTIME_DIR" != "/" ]] || {
     printf 'vox: XDG_RUNTIME_DIR must be an absolute, non-root path\n' >&2
@@ -145,6 +146,43 @@ select_source() {
   write_status "recording" "Super + V para concluir"
 }
 
+paste_last() {
+  local window_id last_file status=0
+  # A recording owns the Flow Bar; an error status here would hide it mid-dictation.
+  [[ ! -f "$state_file" ]] || return 0
+  window_id="$(xdotool getactivewindow 2>/dev/null)" || window_id=""
+  if [[ ! "$window_id" =~ ^[0-9]+$ ]]; then
+    write_status "error" "Foque um campo de texto e tente de novo"
+    launch_overlay
+    return 1
+  fi
+  last_file="$(mktemp "${runtime_root}/.desktop-paste-last.XXXXXX")"
+  # Expanded now because last_file is local; also runs on an early set -e exit.
+  trap "rm -f -- '$last_file'" EXIT
+  python3 "$history_script" last >"$last_file" 2>>"$command_log" || status=$?
+  if [[ "$status" -eq 0 ]] &&
+    python3 "$paste_script" --window-id "$window_id" <"$last_file" 2>>"$command_log"; then
+    write_status "done" "Texto inserido sem enviar"
+  else
+    # Short enough for the fixed-width error Flow Bar, which ellipsizes.
+    case "$status" in
+      0) write_status "error" "Não consegui colar" ;;
+      3) write_status "error" "Nenhum texto salvo" ;;
+      4) write_status "error" "Histórico desativado" ;;
+      *) write_status "error" "Histórico ilegível" ;;
+    esac
+    status=1
+  fi
+  launch_overlay
+  return "$status"
+}
+
+if [[ "${1:-}" == "--paste-last" ]]; then
+  [[ $# -eq 1 ]] || exit 2
+  paste_last
+  exit $?
+fi
+
 if [[ ! -x "$vox_binary" ]]; then
   write_status "error" "Compile o Vox primeiro: make build"
   launch_overlay
@@ -189,6 +227,9 @@ if (exec 9>&-; cd "$project_root" && "$vox_binary" toggle \
   if [[ "$action" == "start" ]]; then
     write_status "recording" "Super + V para concluir"
   else
+    # Save before pasting so a wrong or failed target never loses the text.
+    history_saved=1
+    python3 "$history_script" append <"$transcript_file" 2>>"$command_log" || history_saved=0
     window_id="$(jq -r '.window_id // empty' "$target_file" 2>/dev/null || true)"
     if [[ ! "$window_id" =~ ^[0-9]+$ ]]; then
       write_status "error" "Texto preservado: destino da janela foi perdido"
@@ -198,7 +239,11 @@ if (exec 9>&-; cd "$project_root" && "$vox_binary" toggle \
       write_status "error" "Texto preservado: não foi possível colar"
       exit 1
     fi
-    rm -- "$transcript_file" "$target_file"
+    # Without a history copy, keep the transcript; the next start archives it.
+    if [[ "$history_saved" -eq 1 ]]; then
+      rm -- "$transcript_file"
+    fi
+    rm -- "$target_file"
     write_status "done" "Texto inserido sem enviar"
   fi
   exit 0
