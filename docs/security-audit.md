@@ -36,6 +36,9 @@ changes. Results describe this repository at the version and date above.
 - Recorder signals are sent only after checking the PID's Linux start time and
   process-group identity.
 - Whisper and recorder temporary outputs are hidden behind `0700` directories.
+- The transcript history is a `0600` file in a `0700` directory owned by the
+  user, refuses symlinks, is written atomically, keeps only the last 50
+  entries, stores no window titles, and is disabled by `VOX_HISTORY=0`.
 - External downloads use HTTPS-only redirects, immutable revisions or commits,
   and pinned SHA-256 digests. A dirty whisper.cpp source tree is rejected.
 - CI has read-only repository permissions, no persisted checkout credential,
@@ -78,7 +81,8 @@ changes. Results describe this repository at the version and date above.
 3. **Failure artifacts are intentionally retained.** Audio or transcripts needed
    for recovery remain in the private runtime directory after some failures.
    Inspect and delete them after recovery; the login runtime is normally cleared
-   at session end.
+   at session end. Transcripts also persist outside the runtime directory in
+   the transcript history (see 9).
 4. **Pinned artifacts still require upstream trust.** Digests prevent unnoticed
    changes but do not prove that CMake, whisper.cpp, the models, CUDA, or drivers
    are free of malicious behavior or vulnerabilities.
@@ -94,6 +98,13 @@ changes. Results describe this repository at the version and date above.
    destination identity guarantees expected from a modern portal.
 8. **The local account is trusted.** Vox does not defend against malware already
    running as the same user, a compromised desktop session, kernel, or driver.
+9. **Transcript history persists dictated text.** History is on by default.
+   The last 50 transcripts are stored in plaintext in
+   `${XDG_DATA_HOME:-~/.local/share}/vox/history.jsonl` (mode `0600`). The file
+   survives reboots and ends up in home-directory backups. Clear it with
+   `scripts/vox_history.py clear`. Disable it by setting `VOX_HISTORY=0` in the
+   desktop session environment (for example `~/.xsessionrc`, then log in again);
+   a variable exported in a terminal does not reach the shortcut.
 
 ## Publication controls
 
