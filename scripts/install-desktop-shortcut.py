@@ -19,6 +19,8 @@ SHORTCUTS = (
     ("vox-toggle", "Vox — ditado local", "<Super>v", ""),
     ("vox-toggle-fallback", "Vox — ditado local (reserva)", "<Control><Alt>space", ""),
     ("vox-paste-last", "Vox — colar último texto", "<Super><Shift>v", " --paste-last"),
+    # Free in Cinnamon/Muffin defaults; their <Alt><Super> bindings are only =, -, 0 and s.
+    ("vox-history", "Vox — histórico", "<Super><Alt>v", " --history"),
 )
 
 
@@ -81,7 +83,7 @@ def install(command: Path) -> None:
 
     root.set_strv("custom-list", [*unmanaged_ids, *(item[0] for item in SHORTCUTS)])
     Gio.Settings.sync()
-    print(f"Atalhos instalados: Super + V, Ctrl + Alt + Espaço e Super + Shift + V (colar último) → {command}")
+    print(f"Atalhos instalados: Super + V, Ctrl + Alt + Espaço, Super + Shift + V (colar último) e Super + Alt + V (histórico) → {command}")
 
 
 def remove() -> None:

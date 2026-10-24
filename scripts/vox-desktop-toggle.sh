@@ -8,6 +8,7 @@ readonly overlay_script="${project_root}/scripts/vox-overlay.py"
 readonly paste_script="${project_root}/scripts/paste-x11.py"
 readonly sources_script="${project_root}/scripts/vox_audio_sources.py"
 readonly history_script="${project_root}/scripts/vox_history.py"
+readonly history_window_script="${project_root}/scripts/vox-history-window.py"
 if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then
   [[ "$XDG_RUNTIME_DIR" == /* && "$XDG_RUNTIME_DIR" != "/" ]] || {
     printf 'vox: XDG_RUNTIME_DIR must be an absolute, non-root path\n' >&2
@@ -176,6 +177,24 @@ paste_last() {
   launch_overlay
   return "$status"
 }
+
+open_history() {
+  local window_id
+  [[ ! -f "$state_file" ]] || return 0
+  # Captured now: once the history window opens, it is the active window.
+  window_id="$(xdotool getactivewindow 2>/dev/null)" || window_id=""
+  if [[ "$window_id" =~ ^[0-9]+$ ]]; then
+    setsid -f python3 "$history_window_script" --window-id "$window_id" 9>&- >>"$overlay_log" 2>&1
+  else
+    setsid -f python3 "$history_window_script" 9>&- >>"$overlay_log" 2>&1
+  fi
+}
+
+if [[ "${1:-}" == "--history" ]]; then
+  [[ $# -eq 1 ]] || exit 2
+  open_history
+  exit $?
+fi
 
 if [[ "${1:-}" == "--paste-last" ]]; then
   [[ $# -eq 1 ]] || exit 2

@@ -59,10 +59,20 @@ gsettings get \
 gsettings get \
   org.cinnamon.desktop.keybindings.custom-keybinding:/org/cinnamon/desktop/keybindings/custom-keybindings/vox-paste-last/ \
   binding
+gsettings get \
+  org.cinnamon.desktop.keybindings.custom-keybinding:/org/cinnamon/desktop/keybindings/custom-keybindings/vox-history/ \
+  binding
 ```
 
-Expected bindings are `['<Super>v']`, `['<Control><Alt>space']`, and
-`['<Super><Shift>v']`.
+Expected bindings are `['<Super>v']`, `['<Control><Alt>space']`,
+`['<Super><Shift>v']`, and `['<Super><Alt>v']`.
+
+## The history window does not open or loses copied text
+
+`Super+Alt+V` is ignored while Vox is recording or transcribing. Otherwise,
+check `desktop-overlay.log` in the runtime directory for GTK errors. Copied
+text outlives the window only when a clipboard manager is running; without one,
+paste before pressing `Esc`.
 
 ## The Flow Bar does not appear
 

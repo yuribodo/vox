@@ -2,14 +2,19 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as dt
+import fcntl
+import hashlib
 import json
 import os
 import stat
 import sys
 import tempfile
+import unicodedata
+import uuid
 from pathlib import Path
-from typing import Mapping
+from typing import Iterator, Mapping
 
 MAX_ENTRIES = 50
 MAX_TEXT_BYTES = 1024 * 1024
@@ -47,6 +52,35 @@ def ensure_private_dir(directory: Path) -> None:
     os.chmod(directory, 0o700)
 
 
+@contextlib.contextmanager
+def locked(directory: Path) -> Iterator[None]:
+    """Serialize writers from different processes (dictation, paste-last, window)."""
+    ensure_private_dir(directory)
+    descriptor = os.open(
+        directory / "history.lock",
+        os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC,
+        0o600,
+    )
+    try:
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid():
+            raise RuntimeError("history lock is not a private regular file")
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        yield
+    finally:
+        os.close(descriptor)
+
+
+def entry_id(entry: Mapping[str, str]) -> str:
+    value = entry.get("id")
+    if isinstance(value, str) and value:
+        return value
+    # Entries written before ids existed get a stable id from their content.
+    # Two legacy entries with the same timestamp and text share it (delete removes both).
+    seed = f"{entry.get('timestamp', '')}\x00{entry['text']}".encode("utf-8")
+    return hashlib.sha256(seed).hexdigest()[:32]
+
+
 def read_entries(path: Path) -> list[dict[str, str]]:
     try:
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
@@ -64,8 +98,23 @@ def read_entries(path: Path) -> list[dict[str, str]]:
         except json.JSONDecodeError:
             continue
         if isinstance(entry, dict) and isinstance(entry.get("text"), str) and entry["text"]:
+            entry["id"] = entry_id(entry)
             entries.append(entry)
     return entries
+
+
+def write_entries(path: Path, entries: list[dict[str, str]]) -> None:
+    descriptor, temporary = tempfile.mkstemp(prefix=".history.", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            for entry in entries[-MAX_ENTRIES:]:
+                handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except BaseException:
+        os.unlink(temporary)
+        raise
 
 
 def validate_text(text: str) -> None:
@@ -83,42 +132,68 @@ def append(text: str, env: Mapping[str, str] = os.environ) -> bool:
     path = history_file(env)
     if path is None:
         return False
-    ensure_private_dir(path.parent)
-    entries = read_entries(path)
-    entries.append(
-        {
-            "timestamp": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
-            "text": text,
-        }
-    )
-    descriptor, temporary = tempfile.mkstemp(prefix=".history.", dir=path.parent)
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            for entry in entries[-MAX_ENTRIES:]:
-                handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    except BaseException:
-        os.unlink(temporary)
-        raise
+    with locked(path.parent):
+        entries = read_entries(path)
+        entries.append(
+            {
+                "id": uuid.uuid4().hex,
+                "timestamp": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+                "text": text,
+            }
+        )
+        write_entries(path, entries)
     return True
 
 
-def last(env: Mapping[str, str] = os.environ) -> str | None:
+def readable_file(env: Mapping[str, str]) -> Path:
     path = history_file(env)
     if path is None:
         raise HistoryDisabled("history is disabled by VOX_HISTORY=0")
     if path.parent.is_symlink():
         raise RuntimeError(f"refusing symlink history directory: {path.parent}")
-    entries = read_entries(path)
+    return path
+
+
+def last(env: Mapping[str, str] = os.environ) -> str | None:
+    entries = read_entries(readable_file(env))
     return entries[-1]["text"] if entries else None
+
+
+def list_entries(env: Mapping[str, str] = os.environ) -> list[dict[str, str]]:
+    """Return entries newest first, each with a stable id."""
+    return read_entries(readable_file(env))[::-1]
+
+
+def delete(target_id: str, env: Mapping[str, str] = os.environ) -> bool:
+    """Delete the entry with this id. Returns False when it is already gone."""
+    path = readable_file(env)
+    if not os.path.lexists(path.parent):
+        return False
+    with locked(path.parent):
+        entries = read_entries(path)
+        remaining = [entry for entry in entries if entry["id"] != target_id]
+        if len(remaining) == len(entries):
+            return False
+        write_entries(path, remaining)
+    return True
 
 
 def clear(env: Mapping[str, str] = os.environ) -> None:
     path = history_file(env)
-    if path is not None:
-        path.unlink(missing_ok=True)
+    if path is not None and os.path.lexists(path.parent):
+        with locked(path.parent):
+            path.unlink(missing_ok=True)
+
+
+def normalize(text: str) -> str:
+    """Fold case and accents so "acao" finds "ação"."""
+    decomposed = unicodedata.normalize("NFKD", text.casefold())
+    return "".join(char for char in decomposed if not unicodedata.combining(char))
+
+
+def matches(query: str, folded: str) -> bool:
+    """folded is normalize(text), computed once per entry by the caller."""
+    return all(word in folded for word in normalize(query).split())
 
 
 def main() -> int:
@@ -126,6 +201,9 @@ def main() -> int:
     subcommands = parser.add_subparsers(dest="command", required=True)
     subcommands.add_parser("append", help="save stdin as the newest transcript")
     subcommands.add_parser("last", help="print the newest transcript")
+    subcommands.add_parser("list", help="print all entries as JSON, newest first")
+    delete_parser = subcommands.add_parser("delete", help="delete one entry by id")
+    delete_parser.add_argument("id")
     subcommands.add_parser("clear", help="delete the history file")
     args = parser.parse_args()
 
@@ -141,6 +219,12 @@ def main() -> int:
                 print("vox: history is empty", file=sys.stderr)
                 return EXIT_EMPTY
             sys.stdout.buffer.write(text.encode("utf-8"))
+        elif args.command == "list":
+            print(json.dumps(list_entries(), ensure_ascii=False))
+        elif args.command == "delete":
+            if not delete(args.id):
+                print("vox: no history entry with that id", file=sys.stderr)
+                return 1
         else:
             clear()
         return 0

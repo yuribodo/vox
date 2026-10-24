@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -110,7 +111,14 @@ def paste(window_id: str, text: str) -> None:
         restore_clipboard(clipboard, snapshot)
 
 
+def terminate(_signum: int, _frame: object) -> None:
+    # An exception unwinds through paste()'s finally, which restores the clipboard.
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    raise SystemExit("vox: paste interrupted")
+
+
 def main() -> int:
+    signal.signal(signal.SIGTERM, terminate)
     parser = argparse.ArgumentParser(description="Paste stdin into an X11 window without submitting")
     parser.add_argument("--window-id", required=True)
     args = parser.parse_args()
