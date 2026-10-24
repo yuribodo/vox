@@ -25,6 +25,8 @@ desktop integration scripts.
 | Flow Bar | `scripts/vox-overlay.py` | Render recording feedback and expose the current microphone picker |
 | Source helper | `scripts/vox_audio_sources.py` | Enumerate real PipeWire capture nodes and change the WirePlumber default |
 | X11 paste helper | `scripts/paste-x11.py` | Reactivate the captured window, paste without Enter, and restore clipboard content |
+| History store | `scripts/vox_history.py` | Private, locked transcript history: append, list, delete, clear |
+| History window | `scripts/vox-history-window.py` | Search, paste, copy, and delete history entries |
 | Shortcut installer | `scripts/install-desktop-shortcut.py` | Manage Cinnamon GSettings bindings idempotently |
 
 ## Desktop dictation path
@@ -114,6 +116,40 @@ no-op while Vox is recording (`recording.json` exists) or busy (another
 controller holds the lock while transcribing or pasting), so it can neither
 interrupt a dictation nor replace the `recording` Flow Bar state.
 
+### History window (`Super+Alt+V`)
+
+`vox-desktop-toggle.sh --history` follows the same rules as `--paste-last`
+(controller lock, silent no-op while recording or busy). It reads
+`xdotool getactivewindow` before the window exists, so the target is the
+window the user was working in, and starts `vox-history-window.py --window-id N`
+detached (`setsid`, controller lock closed, output appended to
+`desktop-overlay.log`). Without a valid window ID the window still opens, with
+Paste disabled.
+
+- Single instance: the window is a `Gtk.Application` with a fixed application
+  ID. A second launch only activates the running instance on the session bus,
+  which comes to the front. Without a session bus, GLib falls back to a
+  non-unique instance.
+- The window closes when it loses focus, so its target can never go stale:
+  after the user moves to another window, the next `Super+Alt+V` captures that
+  window. Focus loss is ignored while a paste runs (the window hides itself)
+  and while the Clear confirmation is open.
+- Paste hides the window, pipes the entry to `paste-x11.py` (so the clipboard
+  is restored and Enter is never sent), and closes on success. On failure the
+  window comes back with a message. A helper still running after 15 seconds
+  gets `SIGTERM`, which `paste-x11.py` turns into an exception so its clipboard
+  restore still runs; `SIGKILL` follows only if it has not exited 3 seconds
+  later. While the helper runs, the window keeps
+  serving X11 events, because after a Copy it owns the clipboard the helper
+  snapshots.
+- Copy sets the clipboard and calls `clipboard.store()`, so a clipboard
+  manager keeps the text after the window exits. This is an explicit user
+  action, unlike the transient transcript in a paste.
+- Delete and Clear use `vox_history.delete`/`clear` and identify entries by
+  ID, never by position.
+- Search folds case and accents (`NFKD` without combining marks, then
+  `casefold`); every word in the query must appear in the entry.
+
 ## tmux dictation path
 
 `vox toggle --target %N` uses the same recorder, state machine, and ASR adapter,
@@ -172,18 +208,29 @@ forced to mode `0700`; sensitive JSON and transcript files are mode `0600`.
 
 `scripts/vox_history.py` keeps `${XDG_DATA_HOME:-$HOME/.local/share}/vox/history.jsonl`
 (a relative `XDG_DATA_HOME` is ignored, per the XDG spec). Each line is a JSON
-object with `timestamp` and `text`. Window titles are deliberately not stored:
+object with `id`, `timestamp`, and `text`. Window titles are deliberately not stored:
 they can contain sensitive data and would outlive the session.
 
 - The directory is refused if it is a symlink or not owned by the current user,
   and is forced to `0700`. The file is opened with `O_NOFOLLOW` and must be a
   regular file owned by the current user.
-- Each append rewrites the newest 50 entries to a `mkstemp` file (`0600`), then
-  `fsync` and `os.replace`, so a crash leaves either the old or the new history.
+- Each append or delete rewrites the newest 50 entries to a `mkstemp` file
+  (`0600`), then `fsync` and `os.replace`, so a crash leaves either the old or
+  the new history. Readers never see a partial file.
+- Append, delete, and clear hold an exclusive `flock` on `history.lock`
+  (`0600`, opened with `O_NOFOLLOW`, owner-checked) in the history directory,
+  so writers from the dictation controller and the history window cannot drop
+  each other's changes, and a clear cannot race an append.
+- `id` is a random UUID set on append. Entries written before IDs existed get a
+  stable ID derived from a SHA-256 of their timestamp and text, which is stored
+  on the next write. IDs stay valid when other entries are added or removed.
 - Empty, NUL-containing, or over 1 MiB text is rejected. Malformed lines are
-  skipped on read.
+  skipped on read and therefore dropped by the next append or delete, which
+  rewrites only the valid entries.
 - `VOX_HISTORY=0` disables writing; `last` then exits with status 4. An empty
-  history exits with status 3. `vox_history.py clear` deletes the file.
+  history exits with status 3. `list` prints a JSON array, newest first;
+  `delete ID` removes one entry (status 1 if it is gone); `clear` deletes the
+  file.
 
 Unlike the runtime directory, this file persists across reboots.
 
