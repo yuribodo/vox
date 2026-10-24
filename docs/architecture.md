@@ -85,20 +85,34 @@ The overlay uses a GTK notification window that:
    private temporary output directory, and parses bounded whisper.cpp JSON.
 4. The exact non-empty transcript is created with `O_EXCL` and `0600`
    permissions. Existing output is never overwritten.
-5. The X11 helper snapshots existing clipboard text or image content.
-6. It temporarily publishes the transcript without requesting clipboard-manager
+5. The controller appends the transcript to the persistent history (see below)
+   before any paste attempt. A history failure is logged and does not block the
+   paste; the runtime transcript is then kept even after a successful paste.
+6. The X11 helper snapshots existing clipboard text or image content.
+7. It temporarily publishes the transcript without requesting clipboard-manager
    persistence, reactivates the captured window, and sends `Ctrl+V` with
    modifiers cleared. Terminals detected by their `WM_CLASS` receive
    `Ctrl+Shift+V` instead; `VOX_PASTE_KEY` overrides the key. Terminal pastes
    (and any override) replace newlines and control characters with spaces so
    the transcript cannot submit a shell line or end a bracketed paste early.
-7. It keeps the GTK event loop active while the destination requests the X11
+8. It keeps the GTK event loop active while the destination requests the X11
    selection, then restores and re-publishes only the previous clipboard
    content.
-8. The controller deletes successful transcript/target state and publishes the
+9. The controller deletes successful transcript/target state and publishes the
    `done` state. The toggle deletes successful audio and recording state.
 
 The paste helper never sends Enter.
+
+### Paste last (`Super+Shift+V`)
+
+`vox-desktop-toggle.sh --paste-last` takes the same controller lock, reads the
+newest history entry into a private `0600` file in the runtime directory,
+pastes it with the same X11 helper into the window focused at that moment, and
+deletes the temporary file. It publishes `done` or a friendly `error` (no
+focused window, empty history, history disabled, paste failed). It is a silent
+no-op while Vox is recording (`recording.json` exists) or busy (another
+controller holds the lock while transcribing or pasting), so it can neither
+interrupt a dictation nor replace the `recording` Flow Bar state.
 
 ## tmux dictation path
 
@@ -143,7 +157,8 @@ The default runtime root is `${XDG_RUNTIME_DIR}/vox`. If
 | `recording-*.wav` | Private audio being recorded or preserved after failure | Deleted on success |
 | `desktop-target.json` | Captured X11 window ID/title | One desktop dictation |
 | `desktop-source.json` | Explicit PipeWire node ID, name, and display label | Last selected source |
-| `desktop-transcript.txt` | Exact text awaiting desktop paste | Deleted after successful paste |
+| `desktop-transcript.txt` | Exact text awaiting desktop paste | Deleted after successful paste, unless the history append failed |
+| `.desktop-paste-last.*` | Newest history text being pasted by `--paste-last` | Deleted when that command exits |
 | `desktop-status.json` | Flow Bar state and friendly message | Last desktop state |
 | `desktop-command.log` | Technical CLI/paste detail | Replaced each shortcut command |
 | `desktop-overlay.log` | GTK startup/runtime diagnostics | Appended across sessions |
@@ -152,6 +167,25 @@ The default runtime root is `${XDG_RUNTIME_DIR}/vox`. If
 
 The runtime directory must be a real directory owned by the current user and is
 forced to mode `0700`; sensitive JSON and transcript files are mode `0600`.
+
+## Transcript history
+
+`scripts/vox_history.py` keeps `${XDG_DATA_HOME:-$HOME/.local/share}/vox/history.jsonl`
+(a relative `XDG_DATA_HOME` is ignored, per the XDG spec). Each line is a JSON
+object with `timestamp` and `text`. Window titles are deliberately not stored:
+they can contain sensitive data and would outlive the session.
+
+- The directory is refused if it is a symlink or not owned by the current user,
+  and is forced to `0700`. The file is opened with `O_NOFOLLOW` and must be a
+  regular file owned by the current user.
+- Each append rewrites the newest 50 entries to a `mkstemp` file (`0600`), then
+  `fsync` and `os.replace`, so a crash leaves either the old or the new history.
+- Empty, NUL-containing, or over 1 MiB text is rejected. Malformed lines are
+  skipped on read.
+- `VOX_HISTORY=0` disables writing; `last` then exits with status 4. An empty
+  history exits with status 3. `vox_history.py clear` deletes the file.
+
+Unlike the runtime directory, this file persists across reboots.
 
 ## ASR boundary
 
