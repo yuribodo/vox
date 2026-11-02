@@ -37,8 +37,11 @@ changes. Results describe this repository at the version and date above.
   process-group identity.
 - Whisper and recorder temporary outputs are hidden behind `0700` directories.
 - The transcript history is a `0600` file in a `0700` directory owned by the
-  user, refuses symlinks, is written atomically, keeps only the last 50
-  entries, stores no window titles, and is disabled by `VOX_HISTORY=0`.
+  user, refuses symlinks, is written atomically under an exclusive lock file
+  (also `0600`, `O_NOFOLLOW`, owner-checked), keeps only the last 50
+  entries, stores no window titles, and is disabled by `VOX_HISTORY=0`. The
+  history window deletes entries by ID and validates the target window ID
+  before pasting through the same helper.
 - External downloads use HTTPS-only redirects, immutable revisions or commits,
   and pinned SHA-256 digests. A dirty whisper.cpp source tree is rejected.
 - CI has read-only repository permissions, no persisted checkout credential,
@@ -74,8 +77,10 @@ changes. Results describe this repository at the version and date above.
    can potentially observe windows, synthetic input, or clipboard ownership.
    Wayland support will require a different, permission-aware insertion design.
 2. **Clipboard observers may still see changes.** Vox never calls
-   `clipboard.store()` while the transcript owns the selection, but a
+   `clipboard.store()` while a transcript is being pasted, but a
    clipboard-history tool may independently record any ownership change.
+   Copy in the history window does call `clipboard.store()` on purpose, so a
+   clipboard manager keeps the text the user explicitly copied.
    Disable clipboard history for highly sensitive dictation or use the tmux
    path.
 3. **Failure artifacts are intentionally retained.** Audio or transcripts needed
@@ -101,7 +106,8 @@ changes. Results describe this repository at the version and date above.
 9. **Transcript history persists dictated text.** History is on by default.
    The last 50 transcripts are stored in plaintext in
    `${XDG_DATA_HOME:-~/.local/share}/vox/history.jsonl` (mode `0600`). The file
-   survives reboots and ends up in home-directory backups. Clear it with
+   survives reboots and ends up in home-directory backups. Delete entries or
+   clear it in the history window (`Super+Alt+V`), or run
    `scripts/vox_history.py clear`. Disable it by setting `VOX_HISTORY=0` in the
    desktop session environment (for example `~/.xsessionrc`, then log in again);
    a variable exported in a terminal does not reach the shortcut.
