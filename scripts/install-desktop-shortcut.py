@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shlex
 import sys
 from pathlib import Path
 
@@ -15,9 +16,20 @@ from gi.repository import Gio  # noqa: E402
 ROOT_SCHEMA = "org.cinnamon.desktop.keybindings"
 CUSTOM_SCHEMA = "org.cinnamon.desktop.keybindings.custom-keybinding"
 SHORTCUTS = (
-    ("vox-toggle", "Vox — ditado local", "<Super>v"),
-    ("vox-toggle-fallback", "Vox — ditado local (reserva)", "<Control><Alt>space"),
+    ("vox-toggle", "Vox — ditado local", "<Super>v", ""),
+    ("vox-toggle-fallback", "Vox — ditado local (reserva)", "<Control><Alt>space", ""),
+    ("vox-paste-last", "Vox — colar último texto", "<Super><Shift>v", " --paste-last"),
 )
+
+
+def shortcut_command(command: Path, arguments: str) -> str:
+    # Cinnamon splits the command with shell rules.
+    return shlex.quote(str(command)) + arguments
+
+
+def is_managed_command(existing: str, command: Path, arguments: str) -> bool:
+    # Older installs stored the path unquoted; accept them so upgrades succeed.
+    return existing in (shortcut_command(command, arguments), str(command) + arguments)
 
 
 def custom_settings(shortcut_id: str) -> Gio.Settings:
@@ -37,11 +49,13 @@ def ensure_cinnamon_schemas() -> None:
 def install(command: Path) -> None:
     root = Gio.Settings.new(ROOT_SCHEMA)
     shortcut_ids = list(root.get_strv("custom-list"))
-    managed_ids = {shortcut_id for shortcut_id, _name, _binding in SHORTCUTS}
+    managed_ids = {item[0] for item in SHORTCUTS}
 
-    for shortcut_id in managed_ids.intersection(shortcut_ids):
+    for shortcut_id, _name, _binding, arguments in SHORTCUTS:
+        if shortcut_id not in shortcut_ids:
+            continue
         existing_command = custom_settings(shortcut_id).get_string("command")
-        if existing_command and existing_command != str(command):
+        if existing_command and not is_managed_command(existing_command, command, arguments):
             raise RuntimeError(
                 f'o identificador de atalho "{shortcut_id}" já pertence a outro comando'
             )
@@ -50,7 +64,7 @@ def install(command: Path) -> None:
         if shortcut_id in managed_ids:
             continue
         existing_bindings = custom_settings(shortcut_id).get_strv("binding")
-        for _managed_id, _managed_name, binding in SHORTCUTS:
+        for _managed_id, _managed_name, binding, _arguments in SHORTCUTS:
             if binding in existing_bindings:
                 name = custom_settings(shortcut_id).get_string("name") or shortcut_id
                 raise RuntimeError(f'o atalho {binding} já pertence a "{name}"')
@@ -59,20 +73,20 @@ def install(command: Path) -> None:
     root.set_strv("custom-list", unmanaged_ids)
     Gio.Settings.sync()
 
-    for shortcut_id, name, binding in SHORTCUTS:
+    for shortcut_id, name, binding, arguments in SHORTCUTS:
         shortcut = custom_settings(shortcut_id)
         shortcut.set_string("name", name)
-        shortcut.set_string("command", str(command))
+        shortcut.set_string("command", shortcut_command(command, arguments))
         shortcut.set_strv("binding", [binding])
 
     root.set_strv("custom-list", [*unmanaged_ids, *(item[0] for item in SHORTCUTS)])
     Gio.Settings.sync()
-    print(f"Atalhos instalados: Super + V e Ctrl + Alt + Espaço → {command}")
+    print(f"Atalhos instalados: Super + V, Ctrl + Alt + Espaço e Super + Shift + V (colar último) → {command}")
 
 
 def remove() -> None:
     root = Gio.Settings.new(ROOT_SCHEMA)
-    managed_ids = {shortcut_id for shortcut_id, _name, _binding in SHORTCUTS}
+    managed_ids = {item[0] for item in SHORTCUTS}
     shortcut_ids = [item for item in root.get_strv("custom-list") if item not in managed_ids]
     root.set_strv("custom-list", shortcut_ids)
 
@@ -82,7 +96,7 @@ def remove() -> None:
         shortcut.reset("command")
         shortcut.reset("binding")
     Gio.Settings.sync()
-    print("Atalho do Vox removido")
+    print("Atalhos do Vox removidos")
 
 
 def main() -> int:
