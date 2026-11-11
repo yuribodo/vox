@@ -78,7 +78,7 @@ fetch_and_verify "$vad_url" "$vad_dir/$vad_file" "$vad_sha256"
   -DCMAKE_CUDA_ARCHITECTURES=86 \
   -DGGML_CUDA=ON \
   -DWHISPER_BUILD_TESTS=OFF
-"$cmake_dir/bin/cmake" --build "$runtime_dir" --target whisper-cli --parallel "$(nproc)"
+"$cmake_dir/bin/cmake" --build "$runtime_dir" --target whisper-cli whisper-server --parallel "$(nproc)"
 
 printf 'Whisper runtime: %s/bin/whisper-cli\n' "$runtime_dir"
 printf 'Whisper model:   %s/%s\n' "$model_dir" "$model_file"

@@ -1,4 +1,4 @@
-.PHONY: build test verify fetch-whisper doctor fixtures desktop-shortcut remove-desktop-shortcut
+.PHONY: build test verify fetch-whisper fetch-llm finetune doctor fixtures desktop-shortcut remove-desktop-shortcut
 
 build:
 	go build -o vox ./cmd/vox
@@ -14,6 +14,12 @@ verify: test
 
 fetch-whisper:
 	./scripts/fetch-whisper.sh
+
+fetch-llm:
+	./scripts/fetch-llm.sh
+
+finetune:
+	./scripts/finetune/run.sh
 
 doctor: build
 	./vox doctor

@@ -7,18 +7,24 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"slices"
+	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/yuribodo/vox/internal/asr"
 	"github.com/yuribodo/vox/internal/benchmark"
+	"github.com/yuribodo/vox/internal/polish"
 	"github.com/yuribodo/vox/internal/record"
 	voxtmux "github.com/yuribodo/vox/internal/tmux"
 	"github.com/yuribodo/vox/internal/toggle"
+	"github.com/yuribodo/vox/internal/warm"
 )
 
 const version = "0.1.0"
@@ -78,6 +84,8 @@ func run(ctx context.Context, args []string) error {
 		return toggleCommand(ctx, root, args[1:])
 	case "cancel":
 		return cancelCommand(ctx, args[1:])
+	case "warm":
+		return warmCommand(ctx, root)
 	default:
 		return fmt.Errorf("unknown command %q", args[0])
 	}
@@ -157,7 +165,7 @@ func transcribeCommand(ctx context.Context, root string, args []string) error {
 	if flags.NArg() != 1 {
 		return errors.New("transcribe requires exactly one audio path")
 	}
-	transcriber, err := asr.NewWhisperCPP(asr.DefaultWhisperCPPConfig(root))
+	transcriber, err := newTranscriber(root)
 	if err != nil {
 		return err
 	}
@@ -193,7 +201,11 @@ func benchmarkCommand(ctx context.Context, root string, args []string) error {
 	if err != nil {
 		return err
 	}
-	report := benchmark.Run(ctx, transcriber, manifest)
+	polished, err := newTranscriber(root)
+	if err != nil {
+		return err
+	}
+	report := benchmark.Run(ctx, transcriber, polished, manifest)
 	outputPath := *reportPath
 	if outputPath == "" {
 		outputPath = filepath.Join(root, "artifacts", "whisper-benchmark-report.md")
@@ -253,7 +265,7 @@ func toggleCommand(ctx context.Context, root string, args []string) error {
 	if (*target == "") == (*output == "") {
 		return errors.New("toggle requires exactly one of --target or --output")
 	}
-	transcriber, err := asr.NewWhisperCPP(asr.DefaultWhisperCPPConfig(root))
+	transcriber, err := newTranscriber(root)
 	if err != nil {
 		return err
 	}
@@ -269,6 +281,12 @@ func toggleCommand(ctx context.Context, root string, args []string) error {
 	}
 	if state == "recording" {
 		fmt.Fprintln(os.Stderr, "Recording… invoke toggle again to stop.")
+		// Load the models while the user speaks.
+		if executable, err := os.Executable(); err == nil && os.Getenv("VOX_WARM") != "0" {
+			if err := warm.Start(toggle.DefaultStateDir(), executable); err != nil {
+				fmt.Fprintln(os.Stderr, "vox: warm servers:", err)
+			}
+		}
 	}
 	if state == "inserted" {
 		fmt.Fprintln(os.Stderr, "Transcription inserted without submitting.")
@@ -292,6 +310,69 @@ func cancelCommand(ctx context.Context, args []string) error {
 	}
 	fmt.Fprintln(os.Stderr, "Recording cancelled without transcription.")
 	return nil
+}
+
+// newTranscriber is Whisper plus the developer prompt, user vocabulary and
+// replacements, and the local LLM polish when its runtime is installed.
+func newTranscriber(root string) (asr.Transcriber, error) {
+	warn := func(err error) { fmt.Fprintf(os.Stderr, "vox: %v; falling back\n", err) }
+	dir := toggle.DefaultStateDir()
+	whisperConfig := asr.DefaultWhisperCPPConfig(root)
+	whisperConfig.Warn = warn
+	whisperConfig.Server = func(ctx context.Context) string {
+		// A short recording can stop before the servers finish loading. Wait
+		// rather than fall back: the CLI cannot fit beside them in 4 GiB VRAM.
+		state, _ := warm.Ready(ctx, dir, 30*time.Second)
+		return state.WhisperURL
+	}
+	whisper, err := asr.NewWhisperCPP(whisperConfig)
+	if err != nil {
+		return nil, err
+	}
+	llm := polish.DefaultLLM(root)
+	if llm != nil {
+		llm.Server = func(ctx context.Context) *http.Client {
+			if state, ok := warm.Ready(ctx, dir, 0); ok && state.LLMSocket != "" {
+				return warm.UnixClient(state.LLMSocket)
+			}
+			return nil
+		}
+	}
+	config := polish.ConfigDir()
+	rules, err := polish.LoadRules(filepath.Join(config, "replacements.txt"))
+	if err != nil {
+		return nil, err
+	}
+	return polish.Transcriber{
+		Inner:          whisper,
+		VocabularyPath: filepath.Join(config, "vocabulary.txt"),
+		Rules:          slices.Concat(polish.DefaultRules, rules),
+		LLM:            llm,
+		Warn:           func(err error) { fmt.Fprintf(os.Stderr, "vox: %v; using the Whisper text\n", err) },
+	}, nil
+}
+
+// warmCommand is the detached supervisor started by the first recording.
+func warmCommand(ctx context.Context, root string) error {
+	whisper := asr.DefaultWhisperCPPConfig(root)
+	config := warm.Config{
+		Dir:           toggle.DefaultStateDir(),
+		WhisperServer: filepath.Join(filepath.Dir(whisper.Binary), "whisper-server"),
+		WhisperModel:  whisper.Model,
+		VADModel:      whisper.VADModel,
+		Language:      whisper.Language,
+		Idle:          10 * time.Minute,
+	}
+	if minutes, err := strconv.Atoi(os.Getenv("VOX_WARM_IDLE")); err == nil && minutes > 0 {
+		config.Idle = time.Duration(minutes) * time.Minute
+	}
+	if llm := polish.DefaultLLM(root); llm != nil {
+		server := filepath.Join(filepath.Dir(llm.Binary), "llama-server")
+		if _, err := os.Stat(server); err == nil {
+			config.LlamaServer, config.LLMModel = server, llm.Model
+		}
+	}
+	return warm.Serve(ctx, config)
 }
 
 func projectRoot() (string, error) {
