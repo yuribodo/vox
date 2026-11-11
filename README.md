@@ -381,10 +381,12 @@ Every transcript passes through three steps tuned for programmers:
 4. **Developer fine-tune (optional).** `make finetune` trains a LoRA of S1-mini
    by Superwhisper on about 4,000 generated developer dictations (misheard
    "quote" for "code", "Vitus" for "Vitest", spoken identifiers and paths) in
-   about 15 minutes on the RTX 3050, and Vox then prefers it. On the private
-   benchmark it raised term recall from 79% to 88% and cut non-hesitation WER
-   from 12.7% to 11.3%. The benchmark's sentences and identifiers are kept out
-   of the training data. The fine-tune is still "S1-mini" by "Superwhisper"
+   about 15 minutes on the RTX 3050, and Vox then prefers it. Unfamiliar tool
+   names are trained to stay as heard, so the model fixes known mishearings
+   without "correcting" names it does not know. On the private benchmark it
+   raised term recall from 79% to 83% at the same WER, and it fixes "quote" for
+   "code" in real dictation. The benchmark's sentences and identifiers are kept
+   out of the training data. The fine-tune is still "S1-mini" by "Superwhisper"
    under its license and is never redistributed by this repository.
 
 ### Warm models

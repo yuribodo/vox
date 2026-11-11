@@ -109,6 +109,17 @@ TERMS = {
     "Rails": ["rails"],
 }
 
+# Names absent from TERMS: the right answer is to keep them exactly as heard.
+# Without these the model learns that every unfamiliar name is a mishearing
+# and replaces it with the closest known term ("ShedCN" became "schema").
+KEEP = ["Bun", "Deno", "Hono", "Astro", "Remix", "Drizzle", "Turborepo", "Biome", "Ollama",
+        "LangChain", "Pinia", "Zustand", "Jotai", "Expo", "Tauri", "Electron", "Bevy", "Axum",
+        "Tokio", "Gin", "Echo", "Fiber", "Pydantic", "Polars", "Ruff", "Poetry", "Celery",
+        "Sentry", "PostHog", "Resend", "Clerk", "Neon", "Turso", "Fly.io", "Railway", "Render",
+        "Kafka", "RabbitMQ", "Temporal", "Grafana", "Prometheus", "Loki", "Traefik", "Caddy",
+        "Mintlify", "Storybook", "Playwright", "Cypress", "Mocha", "Chai", "Sinon", "Zig",
+        "Elixir", "Phoenix", "Gleam", "Kotlin", "Ktor", "Swift", "SwiftUI", "Flutter", "Dart"]
+
 VERBS = ["fetch", "load", "parse", "render", "build", "validate", "format", "create", "update",
          "delete", "handle", "compute", "sync", "resolve", "normalize", "serialize", "get", "save"]
 NOUNS = ["user", "order", "invoice", "session", "token", "payment", "profile", "cart", "message",
@@ -202,6 +213,10 @@ def fill(template, rng):
         clean, noisy = clean.replace("{F}", written, 1), noisy.replace("{F}", spoken, 1)
     for slot in ("{T2}", "{T}"):
         while slot in clean:
+            if rng.random() < 0.3:
+                name = rng.choice(KEEP)
+                clean, noisy = clean.replace(slot, name, 1), noisy.replace(slot, name, 1)
+                continue
             term = rng.choice(list(TERMS))
             misheard = rng.choice(TERMS[term]) if rng.random() < 0.75 else term
             clean, noisy = clean.replace(slot, term, 1), noisy.replace(slot, misheard, 1)
