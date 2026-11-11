@@ -49,19 +49,23 @@ func TestWhisperPromptNormalizesWhitespaceAndEnforcesLimit(t *testing.T) {
 	if err := os.WriteFile(path, []byte("React Hook Form\nZod\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	got, err := whisperPrompt(path)
+	got, err := whisperPrompt("", path)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got != "Vocabulary: React Hook Form, Zod." {
 		t.Fatalf("got %q", got)
 	}
+	got, err = whisperPrompt("Fix the  code.", path)
+	if err != nil || got != "Fix the code. Vocabulary: React Hook Form, Zod." {
+		t.Fatalf("got %q, %v", got, err)
+	}
 
 	tooLarge := filepath.Join(dir, "too-large.txt")
 	if err := os.WriteFile(tooLarge, make([]byte, 16*1024+1), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := whisperPrompt(tooLarge); err == nil {
+	if _, err := whisperPrompt("", tooLarge); err == nil {
 		t.Fatal("expected size error")
 	}
 }

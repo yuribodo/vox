@@ -39,7 +39,9 @@ type Report struct {
 	Samples     []SampleResult `json:"samples"`
 }
 
-func Run(ctx context.Context, transcriber asr.Transcriber, manifest Manifest) Report {
+// Run compares raw Whisper modes with the polished dictation pipeline; a nil
+// polished transcriber skips that mode.
+func Run(ctx context.Context, transcriber, polished asr.Transcriber, manifest Manifest) Report {
 	report := Report{GeneratedAt: time.Now().UTC()}
 	for _, sample := range manifest.Samples {
 		result := SampleResult{ID: sample.ID, Category: sample.Category, Audio: sample.Audio}
@@ -49,6 +51,9 @@ func Run(ctx context.Context, transcriber asr.Transcriber, manifest Manifest) Re
 			continue
 		}
 		result.Runs = append(result.Runs, runMode(ctx, transcriber, sample, "greedy", ""))
+		if polished != nil {
+			result.Runs = append(result.Runs, runMode(ctx, polished, sample, "polished", ""))
+		}
 		if len(sample.Hotwords) > 0 {
 			hotwords, cleanup, err := hotwordsFile(sample.Hotwords)
 			if err != nil {

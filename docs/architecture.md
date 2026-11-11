@@ -20,6 +20,8 @@ desktop integration scripts.
 | Recorder | `internal/record` | Produce finalized mono 16 kHz signed-16-bit PCM WAV files through PipeWire |
 | Toggle state machine | `internal/toggle` | Start/stop recording, persist destination, run inference, and clean successful state |
 | Whisper adapter | `internal/asr/whispercpp.go` | Invoke the pinned whisper.cpp runtime with the Q8_0 model and Silero VAD |
+| Transcript polish | `internal/polish` | Add the developer prompt and user vocabulary, remove fillers and repetition loops, apply replacements, and run the optional guarded local LLM pass |
+| Warm servers | `internal/warm` | Detached supervisor that keeps whisper-server and llama-server loaded between dictations and stops them when idle |
 | tmux inserter | `internal/tmux` | Load transcript bytes through stdin and bracket-paste into an explicit pane |
 | Desktop controller | `scripts/vox-desktop-toggle.sh` | Capture an X11 target, serialize shortcut actions, drive the CLI, and publish UI state |
 | Flow Bar | `scripts/vox-overlay.py` | Render recording feedback and expose the current microphone picker |

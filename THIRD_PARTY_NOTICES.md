@@ -12,6 +12,8 @@ components into the gitignored `.local/` directory for local use.
 | [Whisper large-v3-turbo](https://huggingface.co/openai/whisper-large-v3-turbo) | Speech-recognition model | MIT; published by OpenAI |
 | [whisper.cpp converted models](https://huggingface.co/ggerganov/whisper.cpp) | Q8_0 GGML conversion | MIT; published by the whisper.cpp maintainers |
 | [Silero VAD 6.2.0](https://github.com/snakers4/silero-vad) | Voice-activity detection | MIT; copyright 2020-present Silero Team |
+| [llama.cpp b11912](https://github.com/ggml-org/llama.cpp/tree/b11912) | Optional local transcript polish | MIT; copyright 2023-2026 The ggml authors |
+| [S1-mini by Superwhisper](https://huggingface.co/superwhisper/s1-mini) | Optional transcript-polish model | Apache 2.0 plus a naming term (must be identified as "S1-mini" by "Superwhisper"); copyright 2026 Superwhisper; derived from Qwen3-0.6B, copyright 2024 Alibaba Cloud |
 | [CMake 4.1.0](https://cmake.org/download/) | Local build tool | BSD 3-Clause; copyright 2000-2025 Kitware, Inc. and contributors |
 
 The Vox application is written in Go. A distributed Vox executable contains

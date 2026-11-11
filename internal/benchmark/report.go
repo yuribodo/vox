@@ -187,7 +187,7 @@ func (r Report) Markdown() string {
 
 	b.WriteString("\n## Aggregates\n\n| Mode | Successful | Failures | WER | Term recall | Identifier accuracy | Median cold wall | Median inference | Mean / max RTF | Hallucinations |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |\n")
 	aggregates := r.Aggregates()
-	for _, mode := range []string{"greedy", "hotwords"} {
+	for _, mode := range []string{"greedy", "hotwords", "polished"} {
 		aggregate, ok := aggregates[mode]
 		if !ok {
 			continue

@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,6 +27,10 @@ type WhisperCPPConfig struct {
 	Language string
 	Threads  int
 	UseGPU   bool
+	// Server returns a ready whisper-server base URL, or "" to run the CLI.
+	Server func(context.Context) string
+	// Warn receives server failures before falling back to the CLI.
+	Warn func(error)
 }
 
 type WhisperCPP struct {
@@ -63,9 +69,20 @@ func (w *WhisperCPP) Transcribe(ctx context.Context, request Request) (Result, e
 	if err != nil {
 		return Result{}, err
 	}
-	prompt, err := whisperPrompt(request.HotwordsPath)
+	prompt, err := whisperPrompt(request.Prompt, request.HotwordsPath)
 	if err != nil {
 		return Result{}, err
+	}
+	if w.config.Server != nil {
+		if url := w.config.Server(ctx); url != "" {
+			result, err := w.transcribeServer(ctx, url, request.AudioPath, prompt, info.Duration)
+			if err == nil {
+				return result, nil
+			}
+			if w.config.Warn != nil {
+				w.config.Warn(err)
+			}
+		}
 	}
 
 	// whisper.cpp creates its JSON output itself. Keep it inside a private
@@ -137,6 +154,61 @@ func (w *WhisperCPP) Transcribe(ctx context.Context, request Request) (Result, e
 		ModelLoadLatency: loadLatency,
 		InferenceLatency: inferenceLatency,
 		RealTimeFactor:   inferenceLatency.Seconds() / info.Duration.Seconds(),
+	}, nil
+}
+
+// transcribeServer sends the WAV to a warm whisper-server. beam_size matches
+// the CLI default (5); the server would otherwise decode greedily.
+func (w *WhisperCPP) transcribeServer(ctx context.Context, url, audioPath, prompt string, duration time.Duration) (Result, error) {
+	audio, err := os.ReadFile(audioPath)
+	if err != nil {
+		return Result{}, err
+	}
+	var body bytes.Buffer
+	form := multipart.NewWriter(&body)
+	part, err := form.CreateFormFile("file", filepath.Base(audioPath))
+	if err != nil {
+		return Result{}, err
+	}
+	_, _ = part.Write(audio)
+	for key, value := range map[string]string{
+		"prompt": prompt, "language": w.config.Language, "response_format": "json",
+		"beam_size": "5", "no_timestamps": "true",
+	} {
+		_ = form.WriteField(key, value)
+	}
+	if err := form.Close(); err != nil {
+		return Result{}, err
+	}
+	started := time.Now()
+	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, url+"/inference", &body)
+	if err != nil {
+		return Result{}, err
+	}
+	httpRequest.Header.Set("Content-Type", form.FormDataContentType())
+	response, err := http.DefaultClient.Do(httpRequest)
+	if err != nil {
+		return Result{}, fmt.Errorf("whisper-server: %w", err)
+	}
+	defer response.Body.Close()
+	data, err := io.ReadAll(io.LimitReader(response.Body, 8*1024*1024))
+	if err != nil {
+		return Result{}, fmt.Errorf("whisper-server: %w", err)
+	}
+	var parsed struct {
+		Text  string `json:"text"`
+		Error string `json:"error"`
+	}
+	if response.StatusCode != http.StatusOK || json.Unmarshal(data, &parsed) != nil || parsed.Error != "" {
+		return Result{}, fmt.Errorf("whisper-server: status %d: %s", response.StatusCode, tail(string(data), 300))
+	}
+	latency := time.Since(started)
+	return Result{
+		Text:             strings.TrimSpace(parsed.Text),
+		AudioDuration:    duration,
+		Latency:          latency,
+		InferenceLatency: latency,
+		RealTimeFactor:   latency.Seconds() / duration.Seconds(),
 	}, nil
 }
 
@@ -216,9 +288,10 @@ func parseMilliseconds(output string, pattern *regexp.Regexp) time.Duration {
 	return time.Duration(milliseconds * float64(time.Millisecond))
 }
 
-func whisperPrompt(path string) (string, error) {
+func whisperPrompt(base, path string) (string, error) {
+	base = strings.Join(strings.Fields(base), " ")
 	if path == "" {
-		return "", nil
+		return base, nil
 	}
 	file, err := os.Open(path)
 	if err != nil {
@@ -241,9 +314,9 @@ func whisperPrompt(path string) (string, error) {
 		}
 	}
 	if len(phrases) == 0 {
-		return "", nil
+		return base, nil
 	}
-	return "Vocabulary: " + strings.Join(phrases, ", ") + ".", nil
+	return strings.TrimSpace(base + " Vocabulary: " + strings.Join(phrases, ", ") + "."), nil
 }
 
 func DefaultWhisperCPPConfig(projectRoot string) WhisperCPPConfig {

@@ -6,8 +6,10 @@ import (
 )
 
 type Request struct {
-	AudioPath      string
-	HotwordsPath   string
+	AudioPath    string
+	HotwordsPath string
+	// Prompt is literal initial context; Whisper imitates its style and spelling.
+	Prompt         string
 	DecodingMethod string
 }
 

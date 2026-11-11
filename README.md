@@ -119,6 +119,10 @@ terminal-specific insertion commands. Do not install the shortcut until these
 checks pass; use the [troubleshooting guide](docs/troubleshooting.md) if one is
 reported as unavailable.
 
+Optional: `make fetch-llm` adds the local transcript polish (llama.cpp and the
+462 MiB S1-mini model by Superwhisper). Vox uses it automatically once installed; see
+[Developer accuracy](#developer-accuracy).
+
 ### 3. Install the desktop shortcuts
 
 Run this from a graphical Cinnamon/X11 session:
@@ -161,7 +165,8 @@ flowchart LR
     B --> C[PipeWire recorder]
     C --> D[Mono 16 kHz PCM WAV]
     D --> E[Whisper + Silero VAD]
-    E --> F[Private transcript file]
+    E --> P[Developer cleanup + optional local LLM]
+    P --> F[Private transcript file]
     F --> G[Captured X11 window]
     G --> H[Paste without Enter]
     B -. status .-> I[GTK Flow Bar]
@@ -354,6 +359,48 @@ exact transcript with `0600` permissions and no trailing newline.
 inference or changing the captured destination. The desktop uses it internally
 when switching microphones.
 
+## Developer accuracy
+
+Every transcript passes through three steps tuned for programmers:
+
+1. **Developer prompt.** Whisper starts from a short developer sentence
+   (useEffect, GitHub, npm, kubectl, Claude Code, …), which biases spelling and
+   punctuation toward code talk. Add your own names, one per line, to
+   `~/.config/vox/vocabulary.txt`.
+2. **Deterministic cleanup.** Fillers (`uh`, `um`) and Whisper repetition loops
+   are removed, and known mishearings are replaced (`git hub` → `GitHub`,
+   `clock code` → `Claude Code`). Add your own as `heard => wanted` lines in
+   `~/.config/vox/replacements.txt`.
+3. **Local LLM polish (optional).** After `make fetch-llm`, S1-mini by
+   Superwhisper, a 0.6B model trained only to clean dictation, fixes
+   punctuation and capitalization, drops fillers, and resolves
+   self-corrections ("Jest, no, Vitest" becomes "Vitest"). It never sees
+   anything but the transcript and has a 10 second limit. If it fails, times
+   out, or changes more than 35% of the words, Vox pastes the step 2 text
+   instead. Set `VOX_POLISH=0` to turn it off.
+4. **Developer fine-tune (optional).** `make finetune` trains a LoRA of S1-mini
+   by Superwhisper on about 4,000 generated developer dictations (misheard
+   "quote" for "code", "Vitus" for "Vitest", spoken identifiers and paths) in
+   about 15 minutes on the RTX 3050, and Vox then prefers it. On the private
+   benchmark it raised term recall from 79% to 88% and cut non-hesitation WER
+   from 12.7% to 11.3%. The benchmark's sentences and identifiers are kept out
+   of the training data. The fine-tune is still "S1-mini" by "Superwhisper"
+   under its license and is never redistributed by this repository.
+
+### Warm models
+
+Loading the models takes most of a short dictation's time. The first `Super+V`
+therefore starts `vox warm` in the background, which loads Whisper and S1-mini
+into `whisper-server` and `llama-server` while you speak. Later dictations
+reuse them: about 0.4–0.5 s from stop to text instead of about 1.7 s. After 10
+idle minutes both servers exit and release the GPU memory (about 1.9 GiB).
+
+Both stay on this machine. whisper-server listens only on `127.0.0.1` behind
+a random path token stored in the private runtime directory, because it has
+permissive CORS and a model-loading route; llama-server uses a Unix socket in
+the same `0700` directory. If a server is unavailable, Vox runs the one-shot
+binaries as before.
+
 ## Configuration
 
 | Variable | Default | Purpose |
@@ -362,6 +409,11 @@ when switching microphones.
 | `VOX_WHISPER_BIN` | Project-local binary | Override `whisper-cli` path |
 | `VOX_WHISPER_MODEL` | Project-local Q8_0 model | Override Whisper model path |
 | `VOX_WHISPER_VAD_MODEL` | Project-local Silero model | Override VAD model path |
+| `VOX_POLISH` | On when installed | `0` disables the local LLM polish |
+| `VOX_LLM_BIN` | Project-local binary | Override `llama-completion` path |
+| `VOX_LLM_MODEL` | Project-local S1-mini | Override polish model path |
+| `VOX_WARM` | On | `0` loads the models for every dictation instead of keeping them warm |
+| `VOX_WARM_IDLE` | `10` | Minutes without dictation before the warm servers exit |
 
 ## Benchmarked configuration
 
