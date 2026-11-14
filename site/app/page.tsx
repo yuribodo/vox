@@ -7,6 +7,8 @@ const repository = "https://github.com/yuribodo/vox";
 const cloneCommand = "git clone https://github.com/yuribodo/vox.git && cd vox";
 const buildCommand = "make build && make fetch-whisper && make doctor";
 
+const shortcutCommand = "make desktop-shortcut";
+
 const details = [
   {
     title: "Listen",
@@ -54,8 +56,9 @@ export default function Home() {
               <span className="hero-line hero-line-muted"><span data-hero-line>Keep it local.</span></span>
             </h1>
             <p className="hero-description" data-hero-fade>
-              Hold <kbd>Super + V</kbd>, speak, and release. Vox turns your voice
-              into text on your machine, then returns it to your cursor.
+              Focus a text field, press <kbd>Super + V</kbd>, and speak in English.
+              Press it again to transcribe locally and paste into the window
+              where you started. Review the text before sending.
             </p>
             <div className="hero-actions" data-hero-fade>
               <MotionLink className="button button-primary" href="#install">
@@ -106,10 +109,12 @@ export default function Home() {
         <section className="install" id="install" aria-labelledby="install-title">
           <div className="install-copy" data-reveal>
             <p className="section-label">Get started</p>
-            <h2 id="install-title">Ready in two commands.</h2>
+            <h2 id="install-title">Set up your first dictation.</h2>
             <p>
-              Clone, build, and let the doctor check your setup. Your voice
-              never needs an account to get started.
+              Install the dependencies in the full guide first. Clone and build Vox,
+              then download its local runtime and model. This can take several
+              minutes. Read the doctor output before installing the shortcuts
+              from your Cinnamon/X11 desktop session.
             </p>
           </div>
 
@@ -124,13 +129,19 @@ export default function Home() {
               <code>{buildCommand}</code>
               <CopyCommand command={buildCommand} />
             </div>
+            <div className="command-row">
+              <span>3</span>
+              <code>{shortcutCommand}</code>
+              <CopyCommand command={shortcutCommand} />
+            </div>
           </div>
 
           <div className="install-footer" data-reveal>
             <ul aria-label="Requirements">
               <li>Cinnamon / X11</li>
-              <li>PipeWire</li>
-              <li>NVIDIA CUDA</li>
+              <li>PipeWire / WirePlumber</li>
+              <li>NVIDIA CUDA · compute 8.6</li>
+              <li>GCC/G++ 15 · Python 3 / GTK 3</li>
               <li>Go 1.26</li>
             </ul>
             <MotionLink href={`${repository}#install-and-start-using-vox`}>
