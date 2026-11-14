@@ -5,7 +5,7 @@
 
 [Website](https://yuribodo.github.io/vox/) · [Install](#install-and-start-using-vox) · [Architecture](docs/architecture.md) · [Security](SECURITY.md)
 
-**Private, local push-to-talk dictation for Linux. Speak, review, then send.**
+**Private, local toggle-to-talk dictation for Linux. Speak, review, then send.**
 
 Vox records from PipeWire, transcribes locally with Whisper, and pastes the
 result into the text field you started from. A compact Flow Bar shows the live
