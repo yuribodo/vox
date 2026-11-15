@@ -83,45 +83,79 @@ func run(ctx context.Context, args []string) error {
 	}
 }
 
-func doctor(root string) error {
-	type check struct {
-		Name   string `json:"name"`
-		Status string `json:"status"`
-		Detail string `json:"detail,omitempty"`
+type doctorCheck struct {
+	Name     string `json:"name"`
+	Status   string `json:"status"`
+	Detail   string `json:"detail,omitempty"`
+	Required bool   `json:"required"`
+}
+
+// writeDoctorReport preserves the JSON report even when a required check fails.
+func writeDoctorReport(w io.Writer, checks []doctorCheck) error {
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(checks); err != nil {
+		return err
 	}
-	checks := []check{}
+	var failed []string
+	for _, check := range checks {
+		if check.Required && check.Status != "ok" && check.Status != "available" {
+			failed = append(failed, check.Name)
+		}
+	}
+	if len(failed) > 0 {
+		return fmt.Errorf("required checks failed: %s; resolve the report details before dictating", strings.Join(failed, ", "))
+	}
+	return nil
+}
+
+func doctor(root string) error {
+	checks := []doctorCheck{}
 	for _, name := range []string{"pw-record", "pw-dump", "wpctl", "tmux"} {
 		_, err := exec.LookPath(name)
-		status := "ok"
+		check := doctorCheck{Name: name, Status: "ok", Required: name != "tmux"}
 		if err != nil {
-			status = "not installed"
+			check.Status = "not installed"
+			switch name {
+			case "pw-record", "pw-dump":
+				check.Detail = "Install PipeWire command-line tools; see README Requirements."
+			case "wpctl":
+				check.Detail = "Install WirePlumber command-line tools; see README Requirements."
+			case "tmux":
+				check.Detail = "Optional for desktop dictation; install tmux for terminal-target insertion commands."
+			}
 		}
-		checks = append(checks, check{Name: name, Status: status})
+		checks = append(checks, check)
 	}
 	if _, err := exec.LookPath("nvidia-smi"); err != nil {
-		checks = append(checks, check{Name: "NVIDIA driver", Status: "not installed"})
+		checks = append(checks, doctorCheck{Name: "NVIDIA driver", Status: "not installed", Required: true, Detail: "Install the NVIDIA driver for the supported GPU; see README Requirements."})
 	} else {
 		output, runErr := exec.Command("nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader").CombinedOutput()
 		if runErr != nil {
-			checks = append(checks, check{Name: "NVIDIA driver", Status: "unavailable", Detail: strings.TrimSpace(string(output))})
+			checks = append(checks, doctorCheck{Name: "NVIDIA driver", Status: "unavailable", Required: true, Detail: "Check the NVIDIA driver installation: " + strings.TrimSpace(string(output))})
 		} else {
-			checks = append(checks, check{Name: "NVIDIA driver", Status: "ok", Detail: strings.TrimSpace(string(output))})
+			checks = append(checks, doctorCheck{Name: "NVIDIA driver", Status: "ok", Required: true, Detail: strings.TrimSpace(string(output))})
 		}
 	}
 	if _, err := asr.NewWhisperCPP(asr.DefaultWhisperCPPConfig(root)); err != nil {
-		checks = append(checks, check{Name: "whisper runtime/model", Status: "unavailable", Detail: err.Error()})
+		checks = append(checks, doctorCheck{Name: "whisper runtime/model", Status: "unavailable", Required: true, Detail: err.Error() + "; run make fetch-whisper after installing its prerequisites."})
 	} else {
-		checks = append(checks, check{Name: "whisper runtime/model", Status: "ok", Detail: "provider=cuda"})
+		checks = append(checks, doctorCheck{Name: "whisper runtime/model", Status: "ok", Required: true, Detail: "provider=cuda"})
 	}
-	checks = append(checks, check{Name: "CUDA user-space libraries", Status: cudaLibraryStatus()})
-	encoder := json.NewEncoder(os.Stdout)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(checks)
+	cuda := doctorCheck{Name: "CUDA user-space libraries", Status: cudaLibraryStatus(), Required: false}
+	if cuda.Status != "available" {
+		cuda.Detail = "Advisory loader-cache check only: libraries may be available through runtime search paths. Verify GPU inference and see README Requirements."
+	}
+	checks = append(checks, cuda)
+	return writeDoctorReport(os.Stdout, checks)
 }
 
 func cudaLibraryStatus() string {
 	output, err := exec.Command("ldconfig", "-p").Output()
-	if err != nil || !strings.Contains(string(output), "libcublasLt.so.13") {
+	if err != nil {
+		return "unknown (ldconfig unavailable)"
+	}
+	if !strings.Contains(string(output), "libcublasLt.so.13") {
 		return "missing libcublasLt.so.13"
 	}
 	if !strings.Contains(string(output), "libcudnn.so.9") {
