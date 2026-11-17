@@ -113,11 +113,16 @@ build artifacts, then compiles whisper.cpp locally. Expect roughly 1.3 GiB of
 disk use and an 834 MiB model download. The first run can take several minutes,
 depending on the connection and CPU.
 
-`make doctor` should report `ok` for PipeWire, the NVIDIA driver, the Whisper
-runtime/model, and CUDA user-space libraries. tmux is required only for the
-terminal-specific insertion commands. Do not install the shortcut until these
-checks pass; use the [troubleshooting guide](docs/troubleshooting.md) if one is
-reported as unavailable.
+`make doctor` prints a JSON report and exits nonzero when a required check
+fails. PipeWire tools, the NVIDIA driver, and Whisper runtime/model files
+must be present. Missing tmux is non-blocking for desktop dictation, but
+terminal-specific insertion commands still require it. The CUDA loader-cache
+check is advisory because libraries can also be found through other runtime
+search paths. A passing report does not validate audio capture, GPU inference,
+Cinnamon/X11, GTK, or installed shortcuts: also check [Requirements](#requirements)
+and complete the first-dictation test below. See the
+[troubleshooting guide](docs/troubleshooting.md#first-checks) for report fields
+and failure handling.
 
 ### 3. Install the desktop shortcuts
 
