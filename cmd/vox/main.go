@@ -109,6 +109,8 @@ func writeDoctorReport(w io.Writer, checks []doctorCheck) error {
 	return nil
 }
 
+const nvidiaDriverCheckName = "NVIDIA driver"
+
 func doctor(root string) error {
 	checks := []doctorCheck{}
 	for _, name := range []string{"pw-record", "pw-dump", "wpctl", "tmux"} {
@@ -128,13 +130,13 @@ func doctor(root string) error {
 		checks = append(checks, check)
 	}
 	if _, err := exec.LookPath("nvidia-smi"); err != nil {
-		checks = append(checks, doctorCheck{Name: "NVIDIA driver", Status: "not installed", Required: true, Detail: "Install the NVIDIA driver for the supported GPU; see README Requirements."})
+		checks = append(checks, doctorCheck{Name: nvidiaDriverCheckName, Status: "not installed", Required: true, Detail: "Install the NVIDIA driver for the supported GPU; see README Requirements."})
 	} else {
 		output, runErr := exec.Command("nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader").CombinedOutput()
 		if runErr != nil {
-			checks = append(checks, doctorCheck{Name: "NVIDIA driver", Status: "unavailable", Required: true, Detail: "Check the NVIDIA driver installation: " + strings.TrimSpace(string(output))})
+			checks = append(checks, doctorCheck{Name: nvidiaDriverCheckName, Status: "unavailable", Required: true, Detail: "Check the NVIDIA driver installation: " + strings.TrimSpace(string(output))})
 		} else {
-			checks = append(checks, doctorCheck{Name: "NVIDIA driver", Status: "ok", Required: true, Detail: strings.TrimSpace(string(output))})
+			checks = append(checks, doctorCheck{Name: nvidiaDriverCheckName, Status: "ok", Required: true, Detail: strings.TrimSpace(string(output))})
 		}
 	}
 	if _, err := asr.NewWhisperCPP(asr.DefaultWhisperCPPConfig(root)); err != nil {
