@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://yuribodo.github.io/vox/"),
   title: "Vox — local voice-to-text for Linux",
   description:
-    "Open-source push-to-talk dictation for Linux. Transcribe locally and return text directly to your cursor.",
+    "Open-source toggle-to-talk dictation for Linux. Transcribe locally and return text directly to your cursor.",
   openGraph: {
     title: "Vox — dictate anywhere, keep it local",
     description: "Open-source voice-to-text that runs on your Linux machine.",

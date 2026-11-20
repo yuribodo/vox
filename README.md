@@ -5,7 +5,7 @@
 
 [Website](https://yuribodo.github.io/vox/) · [Install](#install-and-start-using-vox) · [Architecture](docs/architecture.md) · [Security](SECURITY.md)
 
-**Private, local push-to-talk dictation for Linux. Speak, review, then send.**
+**Private, local toggle-to-talk dictation for Linux. Speak, review, then send.**
 
 Vox records from PipeWire, transcribes locally with Whisper, and pastes the
 result into the text field you started from. A compact Flow Bar shows the live
@@ -22,11 +22,11 @@ submits a prompt, or executes transcribed text.
 ## How it feels
 
 1. Focus any text field.
-2. Press `Super+V`.
+2. Press and release `Super+V` to start recording.
 3. Confirm the microphone shown in the Flow Bar; click its name to switch if
    needed.
 4. Speak while the Flow Bar reacts to your voice.
-5. Press `Super+V` again.
+5. Press and release `Super+V` again to stop and transcribe.
 6. Review the pasted text and press Enter yourself when it is ready.
 
 `Ctrl+Alt+Space` is installed as a fallback shortcut.
@@ -113,11 +113,16 @@ build artifacts, then compiles whisper.cpp locally. Expect roughly 1.3 GiB of
 disk use and an 834 MiB model download. The first run can take several minutes,
 depending on the connection and CPU.
 
-`make doctor` should report `ok` for PipeWire, the NVIDIA driver, the Whisper
-runtime/model, and CUDA user-space libraries. tmux is required only for the
-terminal-specific insertion commands. Do not install the shortcut until these
-checks pass; use the [troubleshooting guide](docs/troubleshooting.md) if one is
-reported as unavailable.
+`make doctor` prints a JSON report and exits nonzero when a required check
+fails. PipeWire tools, the NVIDIA driver, and Whisper runtime/model files
+must be present. Missing tmux is non-blocking for desktop dictation, but
+terminal-specific insertion commands still require it. The CUDA loader-cache
+check is advisory because libraries can also be found through other runtime
+search paths. A passing report does not validate audio capture, GPU inference,
+Cinnamon/X11, GTK, or installed shortcuts: also check [Requirements](#requirements)
+and complete the first-dictation test below. See the
+[troubleshooting guide](docs/troubleshooting.md#first-checks) for report fields
+and failure handling.
 
 ### 3. Install the desktop shortcuts
 
@@ -136,13 +141,16 @@ moved, rebuild Vox and run `make desktop-shortcut` again.
 ### 4. Make the first dictation
 
 1. Focus an editable text field.
-2. Press `Super+V` and confirm that the Flow Bar says `REC`.
+2. Press and release `Super+V` and confirm that the Flow Bar says `REC`.
 3. Speak in English.
-4. Press `Super+V` again and wait for the text to be pasted.
+4. Press and release `Super+V` again and wait for the text to be pasted.
 5. Review the text and press Enter yourself only when it is ready.
 
-If `Super+V` is already used by another application, use `Ctrl+Alt+Space`. Vox
-does not need a background daemon or login service.
+Recording continues after you release the keys. After the shortcuts are
+installed, `Ctrl+Alt+Space` provides the same start/stop behavior if another
+application intercepts `Super+V`. The installer refuses conflicting custom
+keybindings; resolve those conflicts before installing. Vox does not need a
+background daemon or login service.
 
 ### Remove the desktop shortcuts
 
