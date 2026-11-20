@@ -30,6 +30,41 @@ readonly model_dir="${project_root}/.local/models/whisper-large-v3-turbo-q8_0"
 readonly vad_dir="${project_root}/.local/models/whisper-vad"
 readonly cmake_dir="${tool_dir}/cmake-${cmake_version}-linux-x86_64"
 
+readonly c_compiler="/usr/bin/gcc-15"
+readonly cxx_compiler="/usr/bin/g++-15"
+
+preflight() {
+  local tool compiler
+  local missing=0
+  local -a tools=(git sha256sum nproc)
+  if [[ ! -f "$download_dir/$cmake_archive" ||
+        ! -f "$model_dir/$model_file" ||
+        ! -f "$vad_dir/$vad_file" ]]; then
+    tools+=(curl)
+  fi
+  if [[ ! -x "$cmake_dir/bin/cmake" ]]; then
+    tools+=(tar)
+  fi
+  for tool in "${tools[@]}"; do
+    if ! command -v "$tool" >/dev/null; then
+      printf 'Missing required tool: %s. Install it and make sure it is on PATH.\n' "$tool" >&2
+      missing=1
+    fi
+  done
+  for compiler in "$c_compiler" "$cxx_compiler"; do
+    if [[ ! -f "$compiler" || ! -x "$compiler" ]]; then
+      printf 'Missing required compiler: %s. Install GCC and G++ 15 at the expected paths.\n' "$compiler" >&2
+      missing=1
+    fi
+  done
+  if (( missing )); then
+    printf 'Whisper setup stopped before downloading anything.\n' >&2
+    return 1
+  fi
+}
+
+preflight
+
 mkdir -p "$download_dir" "$tool_dir" "$(dirname "$source_dir")" "$runtime_dir" "$model_dir" "$vad_dir"
 
 fetch_and_verify() {
@@ -65,19 +100,27 @@ if [[ -n "$(git -C "$source_dir" status --porcelain --untracked-files=all)" ]]; 
   exit 1
 fi
 
-fetch_and_verify "$model_url" "$model_dir/$model_file" "$model_sha256"
-fetch_and_verify "$vad_url" "$vad_dir/$vad_file" "$vad_sha256"
+# Let the pinned CMake discover the generator, build tool, and CUDA toolkit
+# with its normal search rules before downloading the large model files.
 
 "$cmake_dir/bin/cmake" \
   -S "$source_dir" \
   -B "$runtime_dir" \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_C_COMPILER=/usr/bin/gcc-15 \
-  -DCMAKE_CXX_COMPILER=/usr/bin/g++-15 \
-  -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-15 \
+  -DCMAKE_C_COMPILER="$c_compiler" \
+  -DCMAKE_CXX_COMPILER="$cxx_compiler" \
+  -DCMAKE_CUDA_HOST_COMPILER="$cxx_compiler" \
   -DCMAKE_CUDA_ARCHITECTURES=86 \
   -DGGML_CUDA=ON \
-  -DWHISPER_BUILD_TESTS=OFF
+  -DWHISPER_BUILD_TESTS=OFF || {
+    status=$?
+    printf 'Whisper build configuration failed before model downloads. Check the CMake errors above for missing build tools or CUDA setup.\n' >&2
+    exit "$status"
+  }
+
+fetch_and_verify "$model_url" "$model_dir/$model_file" "$model_sha256"
+fetch_and_verify "$vad_url" "$vad_dir/$vad_file" "$vad_sha256"
+
 "$cmake_dir/bin/cmake" --build "$runtime_dir" --target whisper-cli --parallel "$(nproc)"
 
 printf 'Whisper runtime: %s/bin/whisper-cli\n' "$runtime_dir"
