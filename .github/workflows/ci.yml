@@ -70,3 +70,13 @@ jobs:
         run: |
           npm audit --omit=dev --audit-level=high
           npm audit --audit-level=critical
+      - name: Install isolated browser smoke dependencies
+        working-directory: site/e2e
+        run: npm ci --ignore-scripts
+      - name: Audit browser smoke tooling
+        working-directory: site/e2e
+        run: npm audit --audit-level=critical
+      - name: Smoke-test static landing page (desktop and mobile)
+        working-directory: site/e2e
+        # Use the Ubuntu runner's installed Chrome; no browser download.
+        run: npm test
