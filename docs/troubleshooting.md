@@ -12,6 +12,20 @@ make build
 make doctor
 ```
 
+`vox doctor` prints the complete JSON check array to stdout, then exits nonzero
+if a required check fails. Existing `name`, `status`, and optional `detail`
+fields are preserved; each entry now also has a `required` boolean. Missing
+`tmux` is non-blocking for desktop dictation, but terminal-target insertion
+still needs it. Scripts using `set -e` or `&&` now stop on required failures.
+Read each failing entry's `detail` for the next step. The CUDA loader-cache
+check is advisory: libraries can be found through other runtime search paths.
+A failed `ldconfig` invocation reports `unknown (ldconfig unavailable)` rather
+than claiming a library is missing.
+
+A passing report only covers the checks listed in it. It does not certify
+Cinnamon/X11, GTK, shortcut installation, microphone capture, or GPU inference;
+follow the README desktop requirements and first-dictation test as well.
+
 Inspect desktop state and logs:
 
 ```bash
