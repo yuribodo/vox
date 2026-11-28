@@ -130,8 +130,19 @@ make desktop-shortcut
 This installs `Super+V`, the fallback `Ctrl+Alt+Space`, `Super+Shift+V`
 (paste the latest transcript again), and `Super+Alt+V` (history window) for
 the current user.
-The shortcut points to this checkout, so keep the repository in place. If it is
-moved, rebuild Vox and run `make desktop-shortcut` again.
+The shortcuts store the absolute path to this checkout. If you need to move
+it, wait until Vox is no longer recording or processing, then:
+
+1. Verify the existing Vox entries as described in
+   [Remove the desktop shortcuts](#remove-the-desktop-shortcuts).
+2. Run `make remove-desktop-shortcut` from the old checkout, then move the folder.
+3. From the new checkout, run `make desktop-shortcut`. It rebuilds Vox and
+   installs the shortcuts with the new path.
+
+If you already moved the checkout, reinstalling alone can fail because the
+old entries still point to the previous path. Once you have verified that
+those entries belong to the old checkout, run the removal command from the
+new checkout, then run `make desktop-shortcut` there.
 
 ### 4. Make the first dictation
 
@@ -146,12 +157,37 @@ does not need a background daemon or login service.
 
 ### Remove the desktop shortcuts
 
+Wait until Vox is no longer recording or processing. From a terminal in the
+same Cinnamon session and user account, inspect the shortcut list and all four
+paths. These commands only read settings:
+
+```bash
+(
+  gsettings get org.cinnamon.desktop.keybindings custom-list || exit 1
+  for id in vox-toggle vox-toggle-fallback vox-paste-last vox-history; do
+    printf '\n%s:\n' "$id"
+    gsettings list-recursively \
+      "org.cinnamon.desktop.keybindings.custom-keybinding:/org/cinnamon/desktop/keybindings/custom-keybindings/$id/" || exit 1
+  done
+)
+```
+
+An ID is unused only if it is not listed, `name` and `command` are empty
+strings (`''`), and `binding` is an empty array (`[]` or `@as []`). Unlisted
+IDs with other values still count. For every ID in use, verify that its
+`command` points to the exact absolute path of the
+expected checkout's `scripts/vox-desktop-toggle.sh` (the old path when moving).
+It must have no arguments for `vox-toggle` or `vox-toggle-fallback`,
+`--paste-last` for `vox-paste-last`, or `--history` for `vox-history`.
+Read the stored values as text; do not run them.
+
+**Do not remove anything if inspection fails, any field cannot be read, or
+any ID in use has a missing or different command.** The remover resets all
+four IDs without checking their commands. Once verified, run:
+
 ```bash
 make remove-desktop-shortcut
 ```
-
-The installer and remover are idempotent. They manage only the four Vox custom
-keybindings and refuse to replace another custom shortcut using the same keys.
 
 ## What happens during a dictation
 
