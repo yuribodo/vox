@@ -39,8 +39,9 @@ printf 'desktop=%s session=%s\n' \
   "$XDG_CURRENT_DESKTOP" "$XDG_SESSION_TYPE"
 ```
 
-Expected values include `X-Cinnamon` and `x11`. Reinstall the managed
-shortcuts idempotently:
+Expected values include `X-Cinnamon` and `x11`. If you moved the checkout,
+follow the [moving instructions](../README.md#3-install-the-desktop-shortcuts).
+Otherwise, reinstall the shortcuts from the same checkout path:
 
 ```bash
 make desktop-shortcut
